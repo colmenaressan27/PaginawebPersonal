@@ -1,0 +1,857 @@
+/* ==========================================================================
+   Portafolio profesional — Santiago Colmenares
+   Hoja de estilos externa y única para index.html, blog.html y contacto.html
+   Paleta original conservada: negro #0a0a0a · grafito #1a1a1a · violeta #6f42c1
+   ========================================================================== */
+
+/* 1. Tokens de diseño ------------------------------------------------------ */
+:root {
+  --ink: #0a0a0a;
+  --panel: #1a1a1a;
+  --panel-alt: #212121;
+  --line: #2f2f2f;
+  --paper: #f8f9fa;
+  --muted: #adb5bd;
+  --violet: #6f42c1;
+  --violet-deep: #593196;
+  --violet-soft: #b197fc; /* acento de texto: cumple contraste AA sobre fondos oscuros */
+  --radius: 14px;
+  --radius-sm: 8px;
+  --block: clamp(3.5rem, 8vw, 6rem); /* ritmo vertical entre bloques */
+  --font-display: "Sora", system-ui, sans-serif;
+  --font-text: "IBM Plex Sans", system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Courier New", monospace;
+}
+
+/* 2. Base y Modelo de Caja ------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5.5rem; /* compensa la cabecera fija al saltar a un ancla */
+}
+
+body {
+  background-color: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-text);
+  line-height: 1.6;
+  overflow-x: hidden; /* red de seguridad contra el scroll lateral en móviles */
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--paper);
+}
+
+h1 {
+  font-size: clamp(2.4rem, 7vw, 4.2rem);
+}
+
+h2 {
+  font-size: clamp(1.7rem, 4vw, 2.5rem);
+}
+
+h3 {
+  font-size: 1.25rem;
+}
+
+p {
+  max-width: 68ch;
+}
+
+svg {
+  max-width: 100%;
+}
+
+a {
+  color: var(--violet-soft);
+  text-underline-offset: 3px;
+}
+
+a:hover,
+a:focus {
+  color: var(--paper);
+}
+
+:focus-visible {
+  outline: 3px solid var(--violet-soft);
+  outline-offset: 3px;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 1080;
+  background-color: var(--violet);
+  color: #fff;
+  padding: 0.7rem 1.1rem;
+  border-radius: 0 0 var(--radius-sm) 0;
+}
+
+.skip-link:focus {
+  left: 0;
+  color: #fff;
+}
+
+/* 3. Estructura de bloques ------------------------------------------------- */
+.block {
+  padding-block: var(--block);
+}
+
+.block__intro {
+  max-width: 62ch;
+  margin-bottom: 3rem;
+}
+
+.lede {
+  font-size: 1.15rem;
+  color: var(--muted);
+  max-width: 58ch;
+}
+
+.meta {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--violet-soft);
+  margin: 0;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.row > p {
+  margin-bottom: 0;
+  max-width: none;
+}
+
+/* 4. Cabecera y navegación ------------------------------------------------- */
+.site-header {
+  background-color: rgba(10, 10, 10, 0.92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+
+.navbar-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--paper);
+}
+
+.navbar-brand:hover,
+.navbar-brand:focus {
+  color: var(--violet-soft);
+}
+
+.navbar .nav-link {
+  color: var(--muted);
+  font-size: 0.98rem;
+  padding-inline: 0.9rem;
+}
+
+.navbar .nav-link:hover,
+.navbar .nav-link:focus {
+  color: var(--paper);
+}
+
+.navbar .nav-link[aria-current="page"] {
+  color: var(--violet-soft);
+}
+
+.navbar-toggler {
+  border-color: var(--line);
+  color: var(--paper);
+}
+
+/* 5. Botones --------------------------------------------------------------- */
+.btn-violet,
+.btn-ghost {
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.7rem 1.6rem;
+  border: 1px solid transparent;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-violet {
+  background-color: var(--violet);
+  color: #fff;
+}
+
+.btn-violet:hover,
+.btn-violet:focus {
+  background-color: var(--violet-deep);
+  color: #fff;
+}
+
+.btn-ghost {
+  border-color: var(--line);
+  color: var(--paper);
+}
+
+.btn-ghost:hover,
+.btn-ghost:focus {
+  border-color: var(--violet-soft);
+  color: var(--violet-soft);
+}
+
+/* 6. Portada: monitor de edición ------------------------------------------- */
+.hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: clamp(2rem, 5vw, 3.5rem);
+  padding-top: clamp(3rem, 7vw, 5rem);
+  padding-bottom: var(--block);
+}
+
+.hero__text {
+  flex: 1 1 21rem;
+  min-width: 0;
+}
+
+.monitor {
+  flex: 1 1 24rem;
+  min-width: 0;
+}
+
+.hero__role {
+  font-family: var(--font-mono);
+  color: var(--violet-soft);
+  font-size: 0.9rem;
+  margin-bottom: 1.2rem;
+}
+
+.hero__actions {
+  display: flex;
+  max-width: none;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  margin-top: 2rem;
+}
+
+.monitor {
+  margin: 0;
+  background-color: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.monitor__bars {
+  display: block;
+  height: 10px;
+  background-image: linear-gradient(
+    90deg,
+    var(--violet) 0 12.5%,
+    #4b4b4b 12.5% 25%,
+    var(--violet-soft) 25% 37.5%,
+    #2b2b2b 37.5% 50%,
+    var(--violet-deep) 50% 62.5%,
+    #3d3d3d 62.5% 75%,
+    var(--violet) 75% 87.5%,
+    #1f1f1f 87.5% 100%
+  );
+}
+
+.monitor__screen {
+  display: block;
+  padding: 1.5rem 1.25rem 1rem;
+}
+
+.monitor__wave {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.monitor__wave .wave-line {
+  fill: none;
+  stroke: var(--violet-soft);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.monitor__wave .wave-grid {
+  stroke: #333;
+  stroke-width: 1;
+}
+
+.monitor__wave .playhead {
+  stroke: var(--violet);
+  stroke-width: 3;
+  animation: sweep 7s linear infinite;
+}
+
+@keyframes sweep {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(600px);
+  }
+}
+
+.monitor__readout {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-top: 1px solid var(--line);
+  padding: 0.7rem 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* 7. Perfil: pistas de trabajo --------------------------------------------- */
+.tracks {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+}
+
+.track {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1.25rem;
+  background-color: var(--ink);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--violet);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.25rem;
+}
+
+.track__id {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--violet-soft);
+  flex: 0 0 2.5rem;
+}
+
+.track__name {
+  flex: 1 1 12rem;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.track__desc {
+  flex: 2 1 22rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin: 0;
+  max-width: none;
+}
+
+.track__clip {
+  flex: 0 0 100%;
+  height: 6px;
+  border-radius: 999px;
+  background-color: #262626;
+  overflow: hidden;
+}
+
+.track__clip span {
+  display: block;
+  height: 100%;
+  background-image: linear-gradient(90deg, var(--violet-deep), var(--violet-soft));
+}
+
+.clip-90 { width: 90%; }
+.clip-75 { width: 75%; }
+.clip-60 { width: 60%; }
+.clip-50 { width: 50%; }
+
+/* 8. Portafolio: tarjetas de proyecto -------------------------------------- */
+.work {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  height: 100%;
+  background-color: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color 0.25s ease, transform 0.25s ease;
+  
+}
+
+.work:hover,
+.work:focus-within {
+  border-color: var(--violet);
+  transform: translateY(-4px);
+}
+
+.work__frame {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 9;
+  margin: 0;
+  padding: 0;
+  max-width: none;
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+}
+
+.work__frame video,
+.work__frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* El reel es vertical: se muestra completo sobre un respaldo desenfocado
+   en lugar de recortarlo dentro del marco 16:9. */
+.work__frame--vertical {
+  background-image: url("../img/macondo-fondo.webp");
+  background-position: center;
+  background-size: cover;
+}
+
+.work__frame--vertical video {
+  object-fit: contain;
+}
+
+.frame__tag {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: #f4eeff;
+  background-color: rgba(10, 10, 10, 0.72);
+  border-radius: 4px;
+  padding: 0.2rem 0.55rem;
+  pointer-events: none; /* no bloquea el botón de reproducción */
+}
+
+.work > :not(.work__frame) {
+  margin-inline: 1.4rem;
+}
+
+.work h3 {
+  margin-top: 0.4rem;
+}
+
+.work__text {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin-bottom: 0;
+  flex-grow: 1;
+  max-width: none;
+}
+
+.work .tags {
+  margin-bottom: 1.4rem;
+}
+
+/* Fotogramas generados con CSS: cero peticiones de imagen, cero peso extra. */
+.frame-1 {
+  background-image: radial-gradient(circle at 25% 30%, var(--violet) 0, transparent 55%),
+    repeating-linear-gradient(115deg, #151515 0 14px, #1d1d1d 14px 28px);
+}
+
+.frame-2 {
+  background-image: repeating-radial-gradient(circle at 80% 20%, rgba(177, 151, 252, 0.28) 0 3px, transparent 3px 16px),
+    linear-gradient(160deg, var(--violet-deep) 0, #101010 70%);
+}
+
+.frame-3 {
+  background-image: conic-gradient(from 210deg at 70% 60%, var(--violet) 0deg, #121212 140deg, var(--violet-deep) 300deg, #121212 360deg);
+}
+
+.frame-4 {
+  background-image: linear-gradient(90deg, rgba(111, 66, 193, 0.5) 0 2px, transparent 2px 100%),
+    linear-gradient(0deg, rgba(111, 66, 193, 0.5) 0 2px, transparent 2px 100%),
+    linear-gradient(200deg, #241640, #0f0f0f);
+  background-size: 26px 26px, 26px 26px, cover;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+}
+
+.tags li {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--violet-soft);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.15rem 0.7rem;
+}
+
+/* 9. Bitácora: maquetación con Flexbox ------------------------------------- */
+.blog-layout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2.5rem;
+  padding-block: var(--block);
+}
+
+.blog-head {
+  flex: 1 1 100%;
+}
+
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  flex: 1 1 30rem;
+  min-width: 0; /* evita que los hijos flexibles desborden la caja */
+}
+
+.post {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.8rem 1.4rem;
+  background-color: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.4rem;
+  transition: border-color 0.25s ease;
+}
+
+.post:hover,
+.post:focus-within {
+  border-color: var(--violet);
+}
+
+/* Alto fijo: así la miniatura nunca estira la tarjeta, sin importar
+   la proporción original de la imagen. */
+.post__thumb {
+  flex: 0 0 8rem;
+  align-self: flex-start;
+  width: 8rem;
+  height: 6rem;
+  margin: 0;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+}
+
+.post__head {
+  flex: 1 1 15rem;
+  min-width: 0;
+}
+
+.post__head h3 {
+  margin-bottom: 0.35rem;
+}
+
+.post__text {
+  flex: 1 1 100%;
+  color: var(--muted);
+  font-size: 0.96rem;
+  margin: 0;
+  max-width: 72ch;
+}
+
+.post__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex: 1 1 100%;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  flex: 1 1 16rem;
+  background-color: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.6rem;
+  position: sticky;
+  top: 6rem;
+}
+
+.sidebar h2 {
+  font-size: 1.1rem;
+  margin: 0.6rem 0 0;
+}
+
+.sidebar h2:first-child {
+  margin-top: 0;
+}
+
+.sidebar p {
+  color: var(--muted);
+  font-size: 0.94rem;
+  margin: 0;
+}
+
+.sidebar ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  font-size: 0.94rem;
+}
+
+.sidebar .tags {
+  flex-direction: row;
+}
+
+/* 10. Formulario de contacto ----------------------------------------------- */
+.form-panel {
+  background-color: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.75rem 1.5rem;
+  margin: 0;
+  min-width: 0; /* fieldset dentro de una rejilla flexible */
+}
+
+.form-panel + .form-panel {
+  margin-top: 1.5rem;
+}
+
+.form-panel legend {
+  float: none;
+  width: auto;
+  padding: 0;
+  margin-bottom: 1.2rem;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.form-group {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.form-group legend {
+  float: none;
+  width: auto;
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  font-family: var(--font-text);
+}
+
+.form-label {
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: var(--paper);
+}
+
+.form-text {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.form-control,
+.form-select {
+  background-color: var(--panel-alt);
+  border: 1px solid var(--line);
+  color: var(--paper);
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-sm);
+}
+
+.form-control:focus,
+.form-select:focus {
+  background-color: var(--panel-alt);
+  color: var(--paper);
+  border-color: var(--violet);
+  box-shadow: 0 0 0 0.22rem rgba(111, 66, 193, 0.3);
+}
+
+.form-control::placeholder {
+  color: #8b8b99;
+}
+
+.form-check-input {
+  background-color: var(--panel-alt);
+  border: 1px solid var(--line);
+}
+
+.form-check-input:checked {
+  background-color: var(--violet);
+  border-color: var(--violet);
+}
+
+.form-check-input:focus {
+  border-color: var(--violet);
+  box-shadow: 0 0 0 0.22rem rgba(111, 66, 193, 0.3);
+}
+
+.form-check-label {
+  color: var(--muted);
+  font-size: 0.94rem;
+}
+
+.form-range::-webkit-slider-thumb {
+  background-color: var(--violet);
+}
+
+.form-range::-moz-range-thumb {
+  background-color: var(--violet);
+}
+
+.form-range::-webkit-slider-runnable-track {
+  background-color: var(--panel-alt);
+}
+
+.form-range::-moz-range-track {
+  background-color: var(--panel-alt);
+}
+
+.range-output {
+  font-family: var(--font-mono);
+  color: var(--violet-soft);
+}
+
+.was-validated .form-control:valid,
+.was-validated .form-select:valid,
+.was-validated .form-control:invalid,
+.was-validated .form-select:invalid {
+  background-image: none;
+}
+
+.was-validated .form-control:valid,
+.was-validated .form-select:valid {
+  border-color: #4ade80;
+}
+
+.was-validated .form-control:invalid,
+.was-validated .form-select:invalid {
+  border-color: #ff8095;
+}
+
+.invalid-feedback {
+  color: #ff8095;
+  font-size: 0.84rem;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  align-items: center;
+  margin-top: 1.5rem;
+}
+
+.form-status {
+  margin: 1.25rem 0 0;
+  padding: 0.9rem 1.1rem;
+  border: 1px solid var(--violet);
+  border-radius: var(--radius-sm);
+  background-color: rgba(111, 66, 193, 0.15);
+  font-size: 0.94rem;
+}
+
+.contact-aside {
+  background-color: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.6rem;
+}
+
+.contact-aside h2 {
+  font-size: 1.15rem;
+}
+
+.contact-aside ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  font-size: 0.94rem;
+  color: var(--muted);
+}
+
+/* 11. Cierre y pie de página ----------------------------------------------- */
+.closer {
+  background-color: var(--panel);
+  background-image: linear-gradient(135deg, rgba(111, 66, 193, 0.35), transparent 62%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: clamp(2rem, 5vw, 3.25rem);
+}
+
+.closer h2 {
+  margin-bottom: 0.75rem;
+}
+
+.site-footer {
+  background-color: var(--ink);
+  border-top: 1px solid var(--line);
+  padding-block: 2.25rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.site-footer p,
+.site-footer address {
+  margin: 0;
+}
+
+/* 12. Adaptaciones responsivas y accesibilidad ----------------------------- */
+@media (max-width: 767.98px) {
+  .post__thumb {
+    flex: 1 1 100%;
+    width: 100%;
+    height: 8rem;
+  }
+
+  .sidebar {
+    position: static;
+  }
+
+  .hero__actions .btn-violet,
+  .hero__actions .btn-ghost {
+    flex: 1 1 100%;
+    text-align: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
