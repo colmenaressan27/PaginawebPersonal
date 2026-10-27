@@ -1,6 +1,6 @@
 /* ==========================================================================
    Portafolio profesional — Santiago Colmenares
-   Hoja de estilos externa y única para index.html, blog.html y contacto.html
+   Hoja de estilos externa y única para index.html, blog.html, contacto.html y pixelteca.html
    Paleta original conservada: negro #0a0a0a · grafito #1a1a1a · violeta #6f42c1
    ========================================================================== */
 
@@ -21,6 +21,7 @@
   --font-display: "Sora", system-ui, sans-serif;
   --font-text: "IBM Plex Sans", system-ui, "Segoe UI", Roboto, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "Courier New", monospace;
+  --font-pixel: "Press Start 2P", "IBM Plex Mono", monospace; /* solo se carga en pixelteca.html */
 }
 
 /* 2. Base y Modelo de Caja ------------------------------------------------- */
@@ -823,8 +824,660 @@ a:focus {
   margin: 0;
 }
 
-/* 12. Adaptaciones responsivas y accesibilidad ----------------------------- */
+/* 12. Pixelteca: estantería 3D, consola y pantalla CRT --------------------- */
+.pixelteca {
+  padding-top: clamp(2.5rem, 6vw, 4rem);
+  padding-bottom: var(--block);
+}
+
+.pixelteca__intro {
+  margin-bottom: 2rem;
+}
+
+.pixelteca__title {
+  font-family: var(--font-pixel);
+  font-weight: 400;
+  font-size: clamp(1.9rem, 6.5vw, 3.4rem);
+  letter-spacing: 0;
+  line-height: 1.25;
+  text-shadow: 4px 4px 0 var(--violet-deep), 0 0 28px rgba(111, 66, 193, 0.55);
+}
+
+.pixelteca__title span {
+  color: var(--violet-soft);
+}
+
+.blink {
+  animation: blink 1s steps(2, start) infinite;
+}
+
+@keyframes blink {
+  to {
+    visibility: hidden;
+  }
+}
+
+.arcade {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 1.5rem;
+}
+
+/* Escenario: el lienzo WebGL va dentro de un marco igual al monitor de la portada. */
+.stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 3 1 34rem;
+  min-width: 0;
+  margin: 0;
+  background-color: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.stage__canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background-image: radial-gradient(ellipse at 50% 35%, #1d1430 0, #0c0a12 72%);
+  touch-action: pan-y; /* deja hacer scroll vertical en móviles */
+}
+
+.stage__canvas.is-pointer {
+  cursor: pointer;
+}
+
+/* Líneas de barrido y viñeta encima del lienzo, sin bloquear el ratón. */
+.stage::before,
+.stage::after {
+  content: "";
+  position: absolute;
+  inset: 10px 0 0;
+  pointer-events: none;
+}
+
+.stage::before {
+  background-image: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.22) 0 1px, transparent 1px 3px);
+  z-index: 1;
+}
+
+.stage::after {
+  background-image: radial-gradient(ellipse at center, transparent 58%, rgba(0, 0, 0, 0.55) 100%);
+  z-index: 1;
+}
+
+.stage__boot {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  font-family: var(--font-pixel);
+  font-size: 0.7rem;
+  color: var(--violet-soft);
+  text-align: center;
+  max-width: 90%;
+}
+
+.stage.is-ready .stage__boot {
+  display: none;
+}
+
+.stage__hud {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  border-top: 1px solid var(--line);
+  padding: 0.7rem 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.stage__hud kbd {
+  display: inline-block;
+  min-width: 1.6rem;
+  margin-right: 0.2rem;
+  padding: 0.2rem 0.4rem;
+  font-family: var(--font-pixel);
+  font-size: 0.55rem;
+  text-align: center;
+  color: var(--paper);
+  background-color: var(--panel-alt);
+  border: 1px solid var(--line);
+  border-bottom-width: 3px;
+  border-radius: 4px;
+  box-shadow: none;
+}
+
+.stage__counter {
+  font-family: var(--font-pixel);
+  font-size: 0.6rem;
+  color: var(--violet-soft);
+}
+
+.stage__sound {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--violet-soft);
+  background-color: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.2rem 0.75rem;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.stage__sound:hover,
+.stage__sound:focus-visible {
+  border-color: var(--violet-soft);
+  color: var(--paper);
+}
+
+.stage__sound[aria-pressed="false"] {
+  color: var(--muted);
+}
+
+/* Sin WebGL la lista de cartuchos de abajo hace todo el trabajo. */
+.stage.is-fallback .stage__canvas {
+  aspect-ratio: 16 / 6;
+}
+
+.stage.is-fallback .stage__keys {
+  display: none;
+}
+
+/* Ficha del cartucho seleccionado */
+.cart-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  flex: 1 1 18rem;
+  min-width: 0;
+  background-color: var(--panel);
+  background-image: linear-gradient(160deg, rgba(111, 66, 193, 0.28), transparent 55%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.6rem;
+}
+
+/* Carátula: la misma etiqueta pixel art del cartucho 3D */
+.cart-info__cover {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 8 / 5;
+  margin-bottom: 0.4rem;
+  background-color: var(--ink);
+  border: 3px solid #2c2c32;
+  border-radius: var(--radius-sm);
+  image-rendering: pixelated;
+  box-shadow: 0 0 0 1px var(--line), 0 10px 30px rgba(111, 66, 193, 0.25);
+}
+
+.cart-info.is-swapping .cart-info__cover {
+  animation: cover-in 0.3s steps(3) both;
+}
+
+@keyframes cover-in {
+  from {
+    filter: brightness(2.2) saturate(0);
+    clip-path: inset(0 0 100% 0);
+  }
+}
+
+.cart-info__title {
+  font-family: var(--font-pixel);
+  font-weight: 400;
+  font-size: clamp(1rem, 2.4vw, 1.3rem);
+  letter-spacing: 0;
+  line-height: 1.45;
+  margin: 0;
+  text-shadow: 3px 3px 0 var(--violet-deep);
+}
+
+.cart-info.is-swapping .cart-info__title {
+  animation: glitch 0.36s steps(4) both;
+}
+
+@keyframes glitch {
+  0% {
+    transform: translateX(-6px);
+    text-shadow: 3px 0 #ff2a5f, -3px 0 #29e3ff;
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateX(4px);
+    text-shadow: -2px 0 #ff2a5f, 2px 0 #29e3ff;
+  }
+  100% {
+    transform: none;
+    text-shadow: 3px 3px 0 var(--violet-deep);
+    opacity: 1;
+  }
+}
+
+.cart-info__desc {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.cart-info__specs {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.4rem 1rem;
+  margin: 0.4rem 0 0;
+  font-size: 0.92rem;
+}
+
+.cart-info__specs dt {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--violet-soft);
+  padding-top: 0.15rem;
+}
+
+.cart-info__specs dd {
+  margin: 0;
+}
+
+.cart-info__note {
+  margin: 0.3rem 0 0;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.84rem;
+  color: var(--muted);
+  background-color: rgba(111, 66, 193, 0.14);
+  border-left: 3px solid var(--violet);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.cart-info .hero__actions {
+  margin-top: auto;
+  padding-top: 0.8rem;
+}
+
+/* Estantería: lomos de cartucho accesibles (también funcionan sin JavaScript). */
+.shelf {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0 0;
+  padding: 0;
+}
+
+.shelf li {
+  transition: filter 0.25s ease, transform 0.25s ease;
+}
+
+.shelf li.is-active,
+.shelf li:focus-within {
+  filter: drop-shadow(0 0 10px rgba(177, 151, 252, 0.75));
+  transform: translateY(-5px);
+}
+
+.spine {
+  --spine-a: var(--violet-soft);
+  --spine-b: var(--violet);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  height: 100%;
+  padding: 1.6rem 1rem 1rem 1.35rem;
+  color: var(--paper);
+  text-decoration: none;
+  background-image: linear-gradient(180deg, #2c2c32, #1c1c20);
+  /* Silueta de cartucho: esquinas superiores achaflanadas */
+  clip-path: polygon(9% 0, 91% 0, 100% 16%, 100% 100%, 0 100%, 0 16%);
+}
+
+/* Franja de color del juego y estrías del plástico */
+.spine::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 6px;
+  background-image: linear-gradient(180deg, var(--spine-a), var(--spine-b));
+}
+
+.spine::after {
+  content: "";
+  position: absolute;
+  top: 0.55rem;
+  left: 22%;
+  right: 22%;
+  height: 0.45rem;
+  background-image: repeating-linear-gradient(180deg, #45454e 0 1px, transparent 1px 3px);
+}
+
+.spine:hover,
+.spine:focus {
+  color: var(--paper);
+}
+
+.spine:focus-visible {
+  outline: none; /* el resplandor del <li> marca el foco */
+}
+
+.shelf li.is-active .spine,
+.spine:focus-visible {
+  background-image: linear-gradient(180deg, #3a3446, #1f1a2a);
+}
+
+.spine__num {
+  font-family: var(--font-pixel);
+  font-size: 0.55rem;
+  color: var(--muted);
+}
+
+.spine__name {
+  font-family: var(--font-pixel);
+  font-size: 0.7rem;
+  line-height: 1.6;
+  color: var(--spine-a);
+}
+
+.spine__genre {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+
+/* Colores de cada juego, tomados de su propia hoja de estilos */
+.spine--galaxhell {
+  --spine-a: #ffe040;
+  --spine-b: #ff2a3a;
+}
+
+.spine--goblinz {
+  --spine-a: #f2c14e;
+  --spine-b: #7ccf3f;
+}
+
+.spine--nachthexen {
+  --spine-a: #ffb84d;
+  --spine-b: #d7261e;
+}
+
+.spine--strikers {
+  --spine-a: #29f0ff;
+  --spine-b: #ff2bd6;
+}
+
+.spine--formula {
+  --spine-a: #7fe8ff;
+  --spine-b: #1462d4;
+}
+
+/* Pantalla CRT de carga */
+.crt {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background-color: #000;
+  overflow: hidden;
+  animation: crt-dark 0.2s ease-out both;
+}
+
+.crt[hidden] {
+  display: none;
+}
+
+.crt:focus {
+  outline: none;
+}
+
+@keyframes crt-dark {
+  from {
+    opacity: 0;
+  }
+}
+
+.crt__screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.1rem;
+  margin: 0;
+  padding: 1rem;
+  text-align: center;
+  font-family: var(--font-pixel);
+  background-image: radial-gradient(ellipse at center, #1d1430 0, #08060d 75%);
+  border-radius: 3% / 5%; /* curvatura del tubo */
+  transform: scale(0, 0.004);
+}
+
+/* Líneas de barrido, viñeta y reflejo del vidrio */
+.crt__screen::before,
+.crt__screen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.crt__screen::before {
+  background-image: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.32) 0 2px, transparent 2px 4px),
+    repeating-linear-gradient(90deg, rgba(255, 0, 60, 0.05) 0 1px, rgba(0, 255, 120, 0.04) 1px 2px, rgba(40, 80, 255, 0.05) 2px 3px);
+}
+
+.crt__screen::after {
+  background-image: radial-gradient(ellipse at 30% 18%, rgba(255, 255, 255, 0.07), transparent 40%),
+    radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.85) 100%);
+}
+
+.crt.is-on .crt__screen {
+  animation: crt-on 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both, crt-flicker 0.15s steps(2) 0.7s infinite;
+}
+
+.crt.is-off .crt__screen {
+  animation: crt-off 0.45s ease-in both;
+}
+
+@keyframes crt-on {
+  0% {
+    transform: scale(0, 0.004);
+    filter: brightness(6);
+  }
+  40% {
+    transform: scale(1, 0.004);
+    filter: brightness(6);
+  }
+  100% {
+    transform: scale(1, 1);
+    filter: brightness(1);
+  }
+}
+
+@keyframes crt-off {
+  0% {
+    transform: scale(1, 1);
+    filter: brightness(1);
+  }
+  55% {
+    transform: scale(1, 0.004);
+    filter: brightness(5);
+  }
+  100% {
+    transform: scale(0, 0.004);
+    filter: brightness(8);
+  }
+}
+
+@keyframes crt-flicker {
+  50% {
+    opacity: 0.94;
+  }
+}
+
+.crt__noise {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  transition: opacity 0.35s ease;
+}
+
+.crt.is-boot .crt__noise {
+  opacity: 0;
+}
+
+.crt__screen > p,
+.crt__log {
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  max-width: none;
+}
+
+.crt__screen > .crt__channel,
+.crt__screen > .crt__skip {
+  position: absolute;
+}
+
+.crt__channel {
+  top: 7%;
+  right: 8%;
+  font-size: clamp(0.9rem, 2.4vw, 1.4rem);
+  color: var(--violet-soft);
+  text-shadow: 0 0 10px var(--violet);
+}
+
+.crt__brand,
+.crt__game,
+.crt__log,
+.crt__bar {
+  opacity: 0;
+  transition: opacity 0.3s ease 0.15s;
+}
+
+.crt.is-boot .crt__brand,
+.crt.is-boot .crt__game,
+.crt.is-boot .crt__log,
+.crt.is-boot .crt__bar {
+  opacity: 1;
+}
+
+.crt__brand {
+  font-size: clamp(1.6rem, 7vw, 3.6rem);
+  color: var(--violet-soft);
+  /* aberración cromática del tubo */
+  text-shadow: 3px 0 rgba(255, 40, 90, 0.65), -3px 0 rgba(40, 220, 255, 0.65), 0 0 26px var(--violet);
+}
+
+.crt.is-boot .crt__brand {
+  animation: crt-jitter 2.4s steps(1) infinite;
+}
+
+@keyframes crt-jitter {
+  0%,
+  100% {
+    transform: none;
+  }
+  47% {
+    transform: translateX(3px) skewX(-6deg);
+  }
+  49% {
+    transform: translateX(-2px);
+  }
+  51% {
+    transform: none;
+  }
+}
+
+.crt__game {
+  font-size: clamp(0.75rem, 2.6vw, 1.15rem);
+  line-height: 1.6;
+  color: var(--paper);
+}
+
+.crt__log {
+  min-height: 7.5em;
+  width: min(30rem, 88vw);
+  padding: 0;
+  font-size: clamp(0.5rem, 1.6vw, 0.65rem);
+  line-height: 2.2;
+  text-align: left;
+  color: var(--muted);
+}
+
+.crt__log li {
+  animation: crt-type 0.3s steps(6) both;
+}
+
+.crt__log li:last-child {
+  color: var(--violet-soft);
+}
+
+@keyframes crt-type {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.crt__bar {
+  width: min(24rem, 76vw);
+  height: 1.5rem;
+  padding: 3px;
+  border: 3px solid var(--violet-soft);
+}
+
+.crt__bar span {
+  display: block;
+  height: 100%;
+  background-image: repeating-linear-gradient(90deg, var(--violet-soft) 0 12px, transparent 12px 15px);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+.crt.is-boot .crt__bar span {
+  animation: crt-bar 1.9s steps(14) 0.25s forwards;
+}
+
+@keyframes crt-bar {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.crt.is-ready .crt__game {
+  color: var(--violet-soft);
+  animation: blink 0.25s steps(2, start) 3;
+}
+
+.crt__skip {
+  bottom: 6%;
+  font-size: 0.55rem;
+  color: #6c6c78;
+}
+
+/* 13. Adaptaciones responsivas y accesibilidad ----------------------------- */
 @media (max-width: 767.98px) {
+  .stage__canvas {
+    aspect-ratio: 4 / 3.4;
+  }
+
+  .stage__keys {
+    display: none;
+  }
+
   .post__thumb {
     flex: 1 1 100%;
     width: 100%;

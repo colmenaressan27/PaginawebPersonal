@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Nachthexen: Las Brujas de la Noche. Rail shooter 3D de estética retro N64/PS1 sobre el 588.º Regimiento de Bombardeo Nocturno soviético. Versión Beta, Capítulo 1.">
+  <meta name="theme-color" content="#05070d">
+  <title>Nachthexen · Las Brujas de la Noche — Capítulo 1 (Beta)</title>
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&amp;family=VT323&amp;display=swap">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <main class="screen crt-medium" id="screen" data-state="boot" data-control="keyboard">
+
+    <!-- Lienzo 3D: se renderiza a baja resolución y se escala con image-rendering: pixelated -->
+    <canvas class="view" id="view" role="img" aria-label="Vista 3D del juego: biplano Polikarpov Po-2 volando de noche">Tu navegador no admite canvas.</canvas>
+
+    <!-- Doble retícula de apuntado (cercana y lejana) -->
+    <canvas class="reticle reticle-near" id="reticle-near" width="32" height="32" aria-hidden="true"></canvas>
+    <canvas class="reticle reticle-far" id="reticle-far" width="32" height="32" aria-hidden="true"></canvas>
+
+    <!-- HUD superior -->
+    <header class="hud hud-top">
+      <section class="hud-block hud-score">
+        <h2 class="hud-label">PUNTOS</h2>
+        <p class="hud-value" id="hud-score">000000</p>
+      </section>
+      <section class="hud-block hud-kills">
+        <h2 class="hud-label">BAJAS</h2>
+        <p class="hud-value hud-hits" id="hud-hits">000</p>
+      </section>
+      <section class="boss-bar" aria-live="polite">
+        <h2 class="boss-name">ZEPPELIN BLINDADO «WALKÜRE»</h2>
+        <span class="bar bar-boss"><span class="bar-fill"></span></span>
+      </section>
+      <section class="hud-block hud-mission">
+        <h2 class="hud-label">CAP. 1 · EL SUSURRO DE LA ESCOBA</h2>
+        <p class="hud-value hud-objective" id="hud-objective">CRUZAR LA LÍNEA DEL FRENTE</p>
+      </section>
+    </header>
+
+    <!-- Avisos centrales -->
+    <p class="banner" id="banner" aria-live="polite"></p>
+    <p class="hud-detect" id="hud-detect">¡DETECTADA POR UN REFLECTOR!</p>
+
+    <!-- Transmisiones de radio estilo Star Fox -->
+    <aside class="comms" id="comms" aria-live="polite" aria-label="Transmisiones de radio del escuadrón">
+      <figure class="comms-portrait">
+        <canvas class="comms-face" id="comms-face" width="64" height="64" aria-hidden="true"></canvas>
+        <figcaption class="comms-name" id="comms-name">RADIO</figcaption>
+      </figure>
+      <p class="comms-text" id="comms-text">…</p>
+    </aside>
+
+    <!-- HUD inferior -->
+    <footer class="hud hud-bottom">
+      <section class="hud-block hud-hull">
+        <h2 class="hud-label">LONA Y MADERA</h2>
+        <span class="bar bar-hull"><span class="bar-fill"></span></span>
+      </section>
+      <section class="hud-block hud-bombs">
+        <h2 class="hud-label">COHETES RS-82</h2>
+        <p class="hud-value" id="hud-bombs">× 3</p>
+        <p class="hud-heavy" id="hud-heavy">BOMBA PESADA FAB-100 ARMADA</p>
+      </section>
+      <section class="hud-block hud-glide">
+        <h2 class="hud-label">PLANEO SILENCIOSO</h2>
+        <span class="bar bar-glide"><span class="bar-fill"></span></span>
+        <p class="hud-glide-state" id="hud-glide-state">LISTO</p>
+      </section>
+    </footer>
+
+    <!-- 1. Pantalla de arranque (desbloquea el audio con un clic) -->
+    <section class="overlay overlay-boot" id="ov-boot" aria-labelledby="boot-title">
+      <p class="boot-cyr">НОЧНЫЕ ВЕДЬМЫ</p>
+      <h2 class="boot-title" id="boot-title">NACHTHEXEN</h2>
+      <p class="boot-sub">588.º Regimiento de Bombardeo Nocturno · 1941</p>
+      <button type="button" class="btn btn-big" id="btn-boot">▶ PULSA PARA COMENZAR</button>
+      <p class="boot-note">Clic para activar el sonido · Se recomiendan auriculares</p>
+      <p class="boot-note boot-touch">Este juego requiere teclado o ratón.</p>
+      <p class="boot-error" id="boot-error"></p>
+    </section>
+
+    <!-- 2. Cinemática inicial -->
+    <section class="overlay overlay-intro" id="ov-intro" aria-labelledby="intro-title">
+      <p class="intro-date" id="intro-date">OCTUBRE DE 1941</p>
+      <p class="intro-text" id="intro-text"></p>
+      <h2 class="intro-title" id="intro-title">
+        <span class="intro-title-cyr">НОЧНЫЕ ВЕДЬМЫ</span>
+        <span class="intro-title-main">NACHTHEXEN</span>
+        <span class="intro-title-sub">LAS BRUJAS DE LA NOCHE</span>
+      </h2>
+      <button type="button" class="btn btn-skip" id="btn-skip">SALTAR ▶▶</button>
+    </section>
+
+    <!-- 3. Menú principal -->
+    <section class="overlay overlay-menu" id="ov-menu" aria-labelledby="menu-title">
+      <header class="title-block">
+        <p class="title-cyr">НОЧНЫЕ ВЕДЬМЫ</p>
+        <h1 class="title-main" id="menu-title">NACHTHEXEN</h1>
+        <p class="title-sub">LAS BRUJAS DE LA NOCHE</p>
+        <p class="title-beta">VERSIÓN BETA · CAPÍTULO 1</p>
+      </header>
+      <nav class="menu" aria-label="Menú principal">
+        <ul class="menu-list">
+          <li><button type="button" class="btn menu-btn" data-action="story">MODO HISTORIA</button></li>
+          <li><button type="button" class="btn menu-btn" data-action="controls">CONTROLES</button></li>
+          <li><button type="button" class="btn menu-btn" data-action="options">OPCIONES</button></li>
+          <li><button type="button" class="btn menu-btn" data-action="intro">VER CINEMÁTICA</button></li>
+        </ul>
+      </nav>
+      <footer class="menu-footer">
+        <p>Homenaje al 588.º Regimiento de Bombardeo Nocturno (1941–1945)</p>
+        <p class="menu-mode">Control actual: <span class="hint-kb">TECLADO</span><span class="hint-mouse">RATÓN</span></p>
+      </footer>
+    </section>
+
+    <!-- 4. Opciones -->
+    <section class="overlay overlay-panel overlay-options" id="ov-options" aria-labelledby="opt-title">
+      <h2 class="panel-title" id="opt-title">OPCIONES</h2>
+      <form class="options" id="options-form">
+        <fieldset class="opt-group">
+          <legend>AUDIO</legend>
+          <p class="opt-row">
+            <label for="opt-master">Volumen general</label>
+            <input type="range" id="opt-master" min="0" max="100" step="5" value="80">
+            <output id="out-master" for="opt-master">80</output>
+          </p>
+          <p class="opt-row">
+            <label for="opt-music">Música</label>
+            <input type="range" id="opt-music" min="0" max="100" step="5" value="80">
+            <output id="out-music" for="opt-music">80</output>
+          </p>
+          <p class="opt-row">
+            <label for="opt-sfx">Efectos</label>
+            <input type="range" id="opt-sfx" min="0" max="100" step="5" value="90">
+            <output id="out-sfx" for="opt-sfx">90</output>
+          </p>
+        </fieldset>
+        <fieldset class="opt-group">
+          <legend>MODO DE CONTROL</legend>
+          <p class="opt-row opt-radios">
+            <input type="radio" name="control" id="ctl-keyboard" value="keyboard" checked>
+            <label for="ctl-keyboard">Teclado</label>
+            <input type="radio" name="control" id="ctl-mouse" value="mouse">
+            <label for="ctl-mouse">Ratón</label>
+          </p>
+          <p class="opt-row">
+            <input type="checkbox" id="opt-invert">
+            <label for="opt-invert">Invertir eje vertical (estilo aviación)</label>
+          </p>
+        </fieldset>
+        <fieldset class="opt-group">
+          <legend>IMAGEN Y JUEGO</legend>
+          <p class="opt-row">
+            <label for="opt-crt">Filtro CRT</label>
+            <select id="opt-crt">
+              <option value="off">Apagado</option>
+              <option value="low">Suave</option>
+              <option value="medium" selected>Clásico</option>
+              <option value="high">Intenso</option>
+            </select>
+          </p>
+          <p class="opt-row">
+            <label for="opt-res">Resolución interna</label>
+            <select id="opt-res">
+              <option value="240">240 líneas (PS1)</option>
+              <option value="270" selected>270 líneas</option>
+              <option value="360">360 líneas</option>
+            </select>
+          </p>
+          <p class="opt-row">
+            <label for="opt-diff">Dificultad</label>
+            <select id="opt-diff">
+              <option value="easy">Recluta</option>
+              <option value="normal" selected>Piloto</option>
+              <option value="hard">Heroína</option>
+            </select>
+          </p>
+        </fieldset>
+      </form>
+      <nav class="panel-nav" aria-label="Opciones">
+        <button type="button" class="btn" data-action="back">VOLVER</button>
+      </nav>
+    </section>
+
+    <!-- 5. Controles -->
+    <section class="overlay overlay-panel overlay-controls" id="ov-controls" aria-labelledby="ctl-title">
+      <h2 class="panel-title" id="ctl-title">CONTROLES</h2>
+      <section class="ctl-col">
+        <h3 class="ctl-title">MODO TECLADO</h3>
+        <table class="ctl-table">
+          <tbody>
+            <tr><th scope="row"><kbd>W A S D</kbd> / <kbd>Flechas</kbd></th><td>Mover el biplano y apuntar</td></tr>
+            <tr><th scope="row"><kbd>Espacio</kbd> / <kbd>J</kbd></th><td>Ametralladora (mantener)</td></tr>
+            <tr><th scope="row"><kbd>K</kbd> / <kbd>Ctrl</kbd></th><td>Cohete RS-82 · Bomba pesada en planeo</td></tr>
+            <tr><th scope="row"><kbd>Q</kbd> / <kbd>E</kbd></th><td>Tonel volado (también doble toque A/D)</td></tr>
+            <tr><th scope="row"><kbd>Shift</kbd></th><td>Modo Planeo Silencioso (apagar motor)</td></tr>
+          </tbody>
+        </table>
+      </section>
+      <section class="ctl-col">
+        <h3 class="ctl-title">MODO RATÓN</h3>
+        <table class="ctl-table">
+          <tbody>
+            <tr><th scope="row">Mover ratón</th><td>Retícula; el biplano la sigue con inercia</td></tr>
+            <tr><th scope="row">Clic izquierdo</th><td>Ametralladora (mantener)</td></tr>
+            <tr><th scope="row">Clic derecho</th><td>Cohete RS-82 · Bomba pesada en planeo</td></tr>
+            <tr><th scope="row">Rueda / <kbd>Espacio</kbd></th><td>Tonel volado</td></tr>
+            <tr><th scope="row"><kbd>E</kbd> / Botón central</th><td>Modo Planeo Silencioso</td></tr>
+          </tbody>
+        </table>
+      </section>
+      <p class="ctl-note">En ambos modos: <kbd>R</kbd> Looping evasivo · <kbd>Esc</kbd> / <kbd>P</kbd> Pausa. El tonel desvía las balas enemigas; en planeo los reflectores te pierden y puedes soltar la bomba pesada.</p>
+      <nav class="panel-nav" aria-label="Controles">
+        <button type="button" class="btn" data-action="back">VOLVER</button>
+      </nav>
+    </section>
+
+    <!-- 6. Selector de capítulos (mapa táctico) -->
+    <section class="overlay overlay-panel overlay-chapters" id="ov-chapters" aria-labelledby="chap-title">
+      <h2 class="panel-title" id="chap-title">MAPA TÁCTICO · FRENTE DEL SUR</h2>
+      <canvas class="map-canvas" id="map-canvas" width="480" height="300" role="img" aria-label="Mapa táctico militar con el aeródromo del regimiento, la línea del frente y las rutas de los capítulos"></canvas>
+      <nav class="chapter-nav" aria-label="Capítulos del modo historia">
+        <ul class="chapter-list">
+          <li>
+            <button type="button" class="chapter is-available" data-action="chapter" data-chapter="1">
+              <span class="chapter-num">CAPÍTULO 1</span>
+              <span class="chapter-name">El Susurro de la Escoba</span>
+              <span class="chapter-tag">DISPONIBLE · BETA</span>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="chapter is-locked" disabled>
+              <span class="chapter-num">CAPÍTULO 2</span>
+              <span class="chapter-name">Cielos de Acero y Lona</span>
+              <span class="chapter-tag">BLOQUEADO · PRÓXIMAMENTE</span>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="chapter is-locked" disabled>
+              <span class="chapter-num">CAPÍTULO 3</span>
+              <span class="chapter-name">23.600 Misiones</span>
+              <span class="chapter-tag">BLOQUEADO · PRÓXIMAMENTE</span>
+            </button>
+          </li>
+        </ul>
+      </nav>
+      <article class="briefing" aria-labelledby="brief-title">
+        <h3 class="briefing-title" id="brief-title">ORDEN DE MISIÓN N.º 1</h3>
+        <p>Cruza la línea del frente de noche, evita los reflectores y destruye el depósito de combustible enemigo. Usa el planeo silencioso para desaparecer en la oscuridad.</p>
+        <p class="briefing-best">Mejor puntuación: <span id="best-score">—</span></p>
+      </article>
+      <nav class="panel-nav" aria-label="Despegue">
+        <button type="button" class="btn btn-launch" data-action="launch">¡DESPEGAR!</button>
+        <button type="button" class="btn" data-action="back">VOLVER</button>
+      </nav>
+    </section>
+
+    <!-- 7. Rótulo de inicio de capítulo -->
+    <section class="overlay overlay-titlecard" id="ov-titlecard" aria-labelledby="tc-title">
+      <p class="tc-chapter">CAPÍTULO 1</p>
+      <h2 class="tc-title" id="tc-title">EL SUSURRO DE LA ESCOBA</h2>
+      <p class="tc-place">Frente del Sur · Primera misión de combate</p>
+    </section>
+
+    <!-- 8. Alerta de jefe -->
+    <section class="overlay overlay-warning" id="ov-warning" aria-labelledby="warn-title">
+      <h2 class="warn-title" id="warn-title">WARNING</h2>
+      <p class="warn-sub">ВНИМАНИЕ · ¡ALERTA! · ACHTUNG</p>
+      <p class="warn-boss">SE APROXIMA: ZEPPELIN BLINDADO «WALKÜRE»</p>
+    </section>
+
+    <!-- 9. Pausa -->
+    <section class="overlay overlay-panel overlay-pause" id="ov-pause" aria-labelledby="pause-title">
+      <h2 class="panel-title" id="pause-title">PAUSA</h2>
+      <nav class="panel-nav panel-nav-col" aria-label="Pausa">
+        <button type="button" class="btn" data-action="resume">CONTINUAR</button>
+        <button type="button" class="btn" data-action="restart">REINICIAR CAPÍTULO</button>
+        <button type="button" class="btn" data-action="quit">SALIR AL MENÚ</button>
+      </nav>
+    </section>
+
+    <!-- 10. Resultados -->
+    <section class="overlay overlay-panel overlay-results" id="ov-results" aria-labelledby="res-title">
+      <h2 class="res-title" id="res-title">MISIÓN CUMPLIDA</h2>
+      <p class="res-sub">CAPÍTULO 1 COMPLETADO</p>
+      <table class="res-table">
+        <tbody>
+          <tr><th scope="row">Puntuación</th><td id="res-score">0</td></tr>
+          <tr><th scope="row">Bajas</th><td id="res-kills">0</td></tr>
+          <tr><th scope="row">Precisión</th><td id="res-acc">0 %</td></tr>
+          <tr><th scope="row">Disparos / impactos</th><td id="res-shots">0 / 0</td></tr>
+          <tr><th scope="row">Cohetes y bombas lanzados</th><td id="res-bombs">0</td></tr>
+          <tr><th scope="row">Daño recibido</th><td id="res-dmg">0</td></tr>
+          <tr><th scope="row">Tiempo de vuelo</th><td id="res-time">0:00</td></tr>
+        </tbody>
+      </table>
+      <p class="res-medal" id="res-medal">MEDALLA AL VALOR</p>
+      <nav class="panel-nav" aria-label="Resultados">
+        <button type="button" class="btn" data-action="restart">REPETIR CAPÍTULO</button>
+        <button type="button" class="btn" data-action="story">MAPA TÁCTICO</button>
+        <button type="button" class="btn" data-action="quit">MENÚ PRINCIPAL</button>
+      </nav>
+    </section>
+
+    <!-- 11. Misión fallida -->
+    <section class="overlay overlay-panel overlay-gameover" id="ov-gameover" aria-labelledby="go-title">
+      <h2 class="go-title" id="go-title">MISIÓN FALLIDA</h2>
+      <p class="go-text" id="go-text">La lona ardió en el cielo nocturno… pero la leyenda continúa.</p>
+      <nav class="panel-nav" aria-label="Misión fallida">
+        <button type="button" class="btn" data-action="retry-boss" id="btn-retry-boss" hidden>REINTENTAR DESDE EL JEFE</button>
+        <button type="button" class="btn" data-action="restart">REINICIAR CAPÍTULO</button>
+        <button type="button" class="btn" data-action="quit">MENÚ PRINCIPAL</button>
+      </nav>
+    </section>
+
+    <noscript>
+      <p class="noscript">Nachthexen necesita JavaScript activado para funcionar.</p>
+    </noscript>
+  </main>
+</body>
+</html>

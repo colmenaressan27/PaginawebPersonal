@@ -1,0 +1,939 @@
+/* =====================================================================
+   GALAXHELL — Estilos retro pixel art
+   Creado por Santiago Colmenares
+   ===================================================================== */
+
+:root {
+  --gh-black: #000000;
+  --gh-white: #ffffff;
+  --gh-yellow: #ffe040;
+  --gh-orange: #ff8c1a;
+  --gh-red: #ff2a3a;
+  --gh-dark-red: #a01020;
+  --gh-cyan: #29e3ff;
+  --gh-blue: #2f6bff;
+  --gh-purple: #b04aff;
+  --gh-pink: #ff60c0;
+  --gh-green: #36e070;
+  --gh-gray: #8890a8;
+  --gh-font: "Press Start 2P", "Courier New", monospace;
+  --gh-heart: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 8' shape-rendering='crispEdges'%3E%3Cpath fill='%23ff2a3a' d='M1 0h2v1H1zM6 0h2v1H6zM0 1h4v1H0zM5 1h4v1H5zM0 2h9v2H0zM1 4h7v1H1zM2 5h5v1H2zM3 6h3v1H3zM4 7h1v1H4z'/%3E%3C/svg%3E");
+}
+
+/* ---------- Página (puedes quitar estas reglas al integrarlo en tu web) ---------- */
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at top, #1a0c33 0%, #07040f 55%, #000 100%);
+  color: var(--gh-white);
+  font-family: var(--gh-font);
+}
+
+.gh-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+/* ---------- Contenedor del juego (responsivo, proporción 3:4) ---------- */
+.gh-container {
+  position: relative;
+  width: min(100%, 600px, calc((100vh - 32px) * 0.75));
+  width: min(100%, 600px, calc((100dvh - 32px) * 0.75));
+  aspect-ratio: 3 / 4;
+  margin: 0 auto;
+  background: #04030c;
+  border: 4px solid var(--gh-white);
+  outline: 4px solid #000;
+  box-shadow:
+    0 0 0 8px #1d1236,
+    0 0 40px rgba(176, 74, 255, 0.45),
+    0 0 90px rgba(41, 227, 255, 0.18);
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  container-type: inline-size;
+  font-family: var(--gh-font);
+  font-size: 10px;
+  font-size: clamp(6px, 2.1cqw, 13px);
+  line-height: 1.5;
+  color: var(--gh-white);
+  box-sizing: border-box;
+}
+
+.gh-container *,
+.gh-container *::before,
+.gh-container *::after {
+  box-sizing: border-box;
+}
+
+.gh-container:focus {
+  outline-color: #2a1850;
+}
+
+#gameCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  z-index: 0;
+}
+
+.gh-scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0) 0, rgba(0, 0, 0, 0) 2px, rgba(0, 0, 0, 0.18) 3px);
+  mix-blend-mode: multiply;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ---------- Caja estilo Undertale ---------- */
+.gh-box {
+  background: var(--gh-black);
+  border: 4px solid var(--gh-white);
+  box-shadow: 0 0 0 3px var(--gh-black), 6px 6px 0 3px rgba(0, 0, 0, 0.6);
+  image-rendering: pixelated;
+}
+
+/* ---------- Botones retro ---------- */
+.gh-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6em;
+  width: 100%;
+  padding: 0.7em 0.4em;
+  background: transparent;
+  border: none;
+  color: var(--gh-white);
+  font-family: var(--gh-font);
+  font-size: 1.15em;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  text-shadow: 2px 2px 0 #3a0820;
+  transition: color 0.08s, transform 0.08s;
+}
+
+.gh-btn.small {
+  font-size: 0.95em;
+}
+
+.gh-btn::before {
+  content: "";
+  width: 1.1em;
+  height: 1em;
+  background: var(--gh-heart) center / contain no-repeat;
+  visibility: hidden;
+  image-rendering: pixelated;
+}
+
+.gh-btn:hover,
+.gh-btn.selected,
+.gh-btn:focus-visible {
+  color: var(--gh-yellow);
+  outline: none;
+}
+
+.gh-btn:hover::before,
+.gh-btn.selected::before,
+.gh-btn:focus-visible::before {
+  visibility: visible;
+  animation: gh-heartbeat 0.6s steps(2) infinite;
+}
+
+.gh-btn:active {
+  transform: translateY(2px);
+}
+
+.gh-btn.is-muted {
+  color: var(--gh-gray);
+}
+
+/* ---------- Overlays ---------- */
+.gh-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: flex;
+  justify-content: center;
+}
+
+/* ---------- Menú principal ---------- */
+.gh-menu {
+  align-items: flex-start;
+  padding-top: 41%;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 34%, rgba(4, 3, 12, 0.55) 60%);
+}
+
+.gh-menu-box {
+  width: 84%;
+  padding: 1.4em 1.2em 1.1em;
+  text-align: center;
+  animation: gh-pop-in 0.35s steps(5) both;
+}
+
+.gh-title {
+  margin: 0 0 0.35em;
+  font-size: 2.6em;
+  font-weight: normal;
+  letter-spacing: 0.08em;
+  line-height: 1.1;
+  background: linear-gradient(to bottom, #fff6a0 0%, var(--gh-yellow) 30%, var(--gh-orange) 60%, var(--gh-red) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(3px 3px 0 #3a0820) drop-shadow(0 0 6px rgba(255, 120, 40, 0.55));
+}
+
+/* Crédito destacado con brillo retro */
+.gh-credit {
+  margin: 0 0 1.1em;
+  font-size: 0.95em;
+  color: var(--gh-yellow);
+  letter-spacing: 0.05em;
+  text-shadow:
+    2px 2px 0 #3a0820,
+    0 0 6px var(--gh-orange),
+    0 0 14px var(--gh-pink);
+  animation: gh-credit-glow 1.6s ease-in-out infinite alternate;
+}
+
+.gh-menu-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2em;
+  margin-bottom: 0.6em;
+}
+
+.gh-options {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7em;
+  margin-bottom: 0.6em;
+}
+
+.gh-vol-label {
+  font-size: 0.95em;
+  color: var(--gh-cyan);
+  text-shadow: 2px 2px 0 #000;
+}
+
+/* Slider de volumen pixelado */
+.gh-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 80%;
+  height: 1.4em;
+  background: transparent;
+  cursor: pointer;
+  margin: 0;
+}
+
+.gh-slider:focus {
+  outline: none;
+}
+
+.gh-slider::-webkit-slider-runnable-track {
+  height: 0.9em;
+  background: repeating-linear-gradient(90deg, #1a2a4a 0 6px, #22365e 6px 12px);
+  border: 3px solid var(--gh-white);
+}
+
+.gh-slider::-moz-range-track {
+  height: 0.9em;
+  background: repeating-linear-gradient(90deg, #1a2a4a 0 6px, #22365e 6px 12px);
+  border: 3px solid var(--gh-white);
+}
+
+.gh-slider::-moz-range-progress {
+  height: 0.9em;
+  background: var(--gh-yellow);
+}
+
+.gh-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 1.2em;
+  height: 1.8em;
+  margin-top: -0.75em;
+  background: var(--gh-yellow);
+  border: 3px solid var(--gh-white);
+  border-radius: 0;
+  box-shadow: 3px 3px 0 #000;
+}
+
+.gh-slider::-moz-range-thumb {
+  width: 1.2em;
+  height: 1.8em;
+  background: var(--gh-yellow);
+  border: 3px solid var(--gh-white);
+  border-radius: 0;
+  box-shadow: 3px 3px 0 #000;
+}
+
+.gh-slider.selected::-webkit-slider-thumb {
+  background: var(--gh-orange);
+}
+
+.gh-slider.selected::-moz-range-thumb {
+  background: var(--gh-orange);
+}
+
+.gh-hint {
+  margin: 0.5em 0 0;
+  font-size: 0.72em;
+  color: #c8d0e0;
+  line-height: 1.6;
+}
+
+.gh-hint.blink {
+  color: var(--gh-cyan);
+  animation: gh-blink 1s steps(2) infinite;
+}
+
+.gh-controls {
+  margin: 0.8em 0 0;
+  font-size: 0.62em;
+  line-height: 1.8;
+  color: var(--gh-gray);
+}
+
+/* ---------- HUD y barras de vida ---------- */
+.gh-hud {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.gh-bar-name {
+  color: var(--gh-white);
+  text-shadow: 2px 2px 0 #000;
+  white-space: nowrap;
+}
+
+.gh-bar {
+  position: relative;
+  flex: 1;
+  height: 1.5em;
+  background: var(--gh-dark-red);
+  border: 2px solid var(--gh-white);
+  box-shadow: 2px 2px 0 #000;
+  overflow: hidden;
+}
+
+.gh-bar-fill,
+.gh-bar-ghost {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+}
+
+.gh-bar-fill {
+  transition: width 0.35s steps(8);
+  background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.35) 0 25%, transparent 25% 100%);
+}
+
+.gh-bar-fill.player {
+  background-color: var(--gh-yellow);
+}
+
+.gh-bar-fill.player.low {
+  background-color: var(--gh-orange);
+  animation: gh-low-hp 0.5s steps(2) infinite;
+}
+
+.gh-bar-fill.enemy {
+  background-color: var(--gh-green);
+}
+
+.gh-bar-ghost {
+  background: var(--gh-white);
+  opacity: 0.75;
+  transition: width 0.8s ease-in 0.35s;
+}
+
+.gh-bar-text {
+  min-width: 5.5em;
+  text-align: right;
+  text-shadow: 2px 2px 0 #000;
+  white-space: nowrap;
+}
+
+.gh-enemy-bar {
+  position: absolute;
+  top: 1.3%;
+  left: 3%;
+  right: 11%;
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+  padding: 0.45em 0.7em;
+  background: rgba(0, 0, 0, 0.75);
+  border: 3px solid var(--gh-white);
+  font-size: 0.85em;
+}
+
+.gh-enemy-bar.boss {
+  border-color: var(--gh-red);
+  animation: gh-boss-border 0.8s steps(2) infinite;
+}
+
+.gh-enemy-bar.boss .gh-bar-name {
+  color: var(--gh-red);
+}
+
+.gh-enemy-bar.boss .gh-bar-fill.enemy {
+  background-color: var(--gh-purple);
+}
+
+.gh-player-bar {
+  position: absolute;
+  left: 3%;
+  right: 3%;
+  bottom: 0.9%;
+  height: 10%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.35em;
+}
+
+.gh-player-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8em;
+}
+
+.gh-lv {
+  color: var(--gh-yellow);
+  text-shadow: 2px 2px 0 #000;
+  white-space: nowrap;
+}
+
+.gh-hp-label {
+  color: var(--gh-red);
+  font-size: 0.85em;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.gh-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  min-height: 1.3em;
+}
+
+.gh-badge {
+  padding: 0.2em 0.5em;
+  font-size: 0.68em;
+  border: 2px solid currentColor;
+  background: rgba(0, 0, 0, 0.75);
+  white-space: nowrap;
+}
+
+.gh-badge.laser { color: var(--gh-cyan); }
+.gh-badge.missile { color: var(--gh-orange); }
+.gh-badge.plasma { color: var(--gh-purple); animation: gh-blink 0.8s steps(2) infinite; }
+.gh-badge.shield { color: var(--gh-cyan); border-style: dashed; }
+
+/* ---------- Texto de batalla ---------- */
+.gh-battle-log {
+  position: absolute;
+  left: 11.5%;
+  top: 47.3%;
+  width: 77%;
+  margin: 0;
+  z-index: 3;
+  font-size: 0.95em;
+  line-height: 1.8;
+  color: var(--gh-white);
+  text-shadow: 2px 2px 0 #000;
+  pointer-events: none;
+  min-height: 3.6em;
+}
+
+/* ---------- Menú flotante alrededor de la nave ---------- */
+.gh-float-menu {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.gh-float-btn {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.65em 0.7em;
+  background: #000;
+  border: 3px solid var(--gh-orange);
+  color: var(--gh-orange);
+  font-family: var(--gh-font);
+  font-size: 0.9em;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 #000;
+  animation: gh-float 1.4s ease-in-out infinite;
+}
+
+.gh-float-btn.item {
+  animation-delay: -0.7s;
+}
+
+.gh-float-btn::before {
+  content: "";
+  width: 1.1em;
+  height: 1em;
+  background: var(--gh-heart) center / contain no-repeat;
+  display: none;
+}
+
+.gh-float-btn.selected,
+.gh-float-btn:hover {
+  color: var(--gh-yellow);
+  border-color: var(--gh-yellow);
+  box-shadow: 0 0 10px rgba(255, 224, 64, 0.6), 3px 3px 0 #000;
+}
+
+.gh-float-btn.selected::before {
+  display: block;
+}
+
+/* ---------- Inventario ---------- */
+.gh-item-menu {
+  position: absolute;
+  left: 9.5%;
+  top: 46.2%;
+  width: 81%;
+  max-height: 40%;
+  z-index: 5;
+  padding: 0.9em 1em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  overflow: hidden;
+  animation: gh-pop-in 0.2s steps(4) both;
+}
+
+.gh-item-title {
+  color: var(--gh-yellow);
+  text-shadow: 2px 2px 0 #3a0820;
+}
+
+.gh-item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+  overflow-y: auto;
+}
+
+.gh-item-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+  padding: 0.3em 0.4em;
+  cursor: pointer;
+}
+
+.gh-item-list li::before {
+  content: "";
+  width: 1.1em;
+  height: 1em;
+  flex: none;
+  background: var(--gh-heart) center / contain no-repeat;
+  visibility: hidden;
+}
+
+.gh-item-list li.selected,
+.gh-item-list li:hover {
+  color: var(--gh-yellow);
+  background: rgba(255, 224, 64, 0.08);
+}
+
+.gh-item-list li.selected::before {
+  visibility: visible;
+}
+
+.gh-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6em;
+  height: 1.6em;
+  flex: none;
+  color: #000;
+  font-size: 0.85em;
+  border: 2px solid var(--gh-white);
+}
+
+.gh-item-name {
+  flex: 1;
+}
+
+.gh-item-qty {
+  color: var(--gh-gray);
+}
+
+.gh-item-desc {
+  margin: 0;
+  min-height: 2.6em;
+  font-size: 0.75em;
+  line-height: 1.7;
+  color: var(--gh-cyan);
+}
+
+.gh-item-menu .gh-hint {
+  margin: 0;
+  font-size: 0.62em;
+}
+
+/* ---------- Intercomunicador del General (Star Fox) ---------- */
+.gh-dialog {
+  position: absolute;
+  left: 2.5%;
+  right: 2.5%;
+  bottom: 1.6%;
+  min-height: 21%;
+  z-index: 6;
+  display: flex;
+  align-items: flex-start;
+  gap: 1em;
+  padding: 0.9em;
+  background: var(--gh-black);
+  border: 4px solid var(--gh-white);
+  box-shadow: 0 0 0 3px #000, 0 0 18px rgba(41, 227, 255, 0.35);
+  cursor: pointer;
+  animation: gh-comm-open 0.3s steps(5) both;
+}
+
+.gh-dialog.urgent {
+  border-color: var(--gh-red);
+  animation: gh-comm-open 0.3s steps(5) both, gh-urgent 0.6s steps(2) infinite;
+}
+
+.gh-portrait-frame {
+  position: relative;
+  flex: none;
+  width: 22%;
+  aspect-ratio: 1;
+  border: 3px solid var(--gh-cyan);
+  background: #071a3a;
+  box-shadow: inset 0 0 0 2px #000, 0 0 10px rgba(41, 227, 255, 0.5);
+}
+
+.gh-dialog.urgent .gh-portrait-frame {
+  border-color: var(--gh-red);
+  box-shadow: inset 0 0 0 2px #000, 0 0 12px rgba(255, 42, 58, 0.7);
+}
+
+#portraitCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.gh-comm-label {
+  position: absolute;
+  left: 50%;
+  bottom: -0.9em;
+  transform: translateX(-50%);
+  padding: 0.1em 0.4em;
+  background: #000;
+  color: var(--gh-cyan);
+  font-size: 0.6em;
+  border: 2px solid currentColor;
+  animation: gh-blink 1.2s steps(2) infinite;
+}
+
+.gh-dialog.urgent .gh-comm-label {
+  color: var(--gh-red);
+}
+
+.gh-dialog-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.gh-dialog-name {
+  margin-bottom: 0.5em;
+  color: var(--gh-green);
+  font-size: 0.85em;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.gh-dialog.urgent .gh-dialog-name {
+  color: var(--gh-red);
+}
+
+.gh-dialog-text {
+  margin: 0;
+  font-size: 0.88em;
+  line-height: 1.8;
+  min-height: 5.4em;
+}
+
+.gh-dialog-next {
+  position: absolute;
+  right: 0.8em;
+  bottom: 0.4em;
+  color: var(--gh-yellow);
+  animation: gh-bounce 0.6s steps(2) infinite;
+}
+
+.gh-dialog-next.waiting {
+  visibility: hidden;
+}
+
+.gh-dialog-skip {
+  position: absolute;
+  right: 0.8em;
+  top: -1.9em;
+  padding: 0.2em 0.5em;
+  font-size: 0.6em;
+  color: var(--gh-gray);
+  background: #000;
+  border: 2px solid var(--gh-gray);
+}
+
+/* ---------- Alerta roja del Boss ---------- */
+.gh-alert {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 30%;
+  z-index: 7;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  pointer-events: none;
+  animation: gh-alert-flash 0.5s steps(2) infinite;
+}
+
+.gh-alert-stripe {
+  height: 1.8em;
+  background: repeating-linear-gradient(-45deg, var(--gh-red) 0 14px, #000 14px 28px);
+  background-size: 40px 40px;
+  animation: gh-stripes 0.6s linear infinite;
+}
+
+.gh-alert-text {
+  padding: 0.8em 0;
+  background: rgba(120, 0, 10, 0.85);
+  color: var(--gh-white);
+  font-size: 1.8em;
+  line-height: 1.5;
+  text-align: center;
+  letter-spacing: 0.06em;
+  text-shadow: 3px 3px 0 #000, 0 0 12px var(--gh-red);
+}
+
+/* ---------- Game Over y Victoria ---------- */
+.gh-gameover,
+.gh-victory {
+  align-items: center;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.gh-end-box {
+  width: 84%;
+  padding: 1.4em 1.2em;
+  text-align: center;
+  animation: gh-pop-in 0.35s steps(5) both;
+}
+
+.gh-gameover-title {
+  margin: 0 0 0.5em;
+  font-size: 2.4em;
+  font-weight: normal;
+  color: var(--gh-red);
+  text-shadow: 4px 4px 0 #3a0010, 0 0 14px rgba(255, 42, 58, 0.6);
+  animation: gh-shake 0.5s steps(3) 2;
+}
+
+.gh-victory-title {
+  margin: 0 0 0.5em;
+  font-size: 2.2em;
+  font-weight: normal;
+  color: var(--gh-yellow);
+  text-shadow: 4px 4px 0 #3a0820, 0 0 16px rgba(255, 224, 64, 0.7);
+  animation: gh-credit-glow 1.2s ease-in-out infinite alternate;
+}
+
+.gh-end-text {
+  margin: 0 0 1.2em;
+  font-size: 0.85em;
+  line-height: 1.8;
+  color: #c8d0e0;
+}
+
+.gh-stats {
+  list-style: none;
+  margin: 0 0 1.2em;
+  padding: 0.8em;
+  border: 2px dashed var(--gh-gray);
+  font-size: 0.75em;
+  text-align: left;
+}
+
+.gh-stats li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1em;
+  padding: 0.3em 0;
+}
+
+.gh-stats li span:last-child {
+  color: var(--gh-cyan);
+}
+
+.gh-credits-roll {
+  margin-bottom: 0.8em;
+}
+
+.gh-credits-game {
+  margin: 0 0 0.6em;
+  font-size: 1.4em;
+  color: var(--gh-orange);
+  text-shadow: 3px 3px 0 #3a0820;
+}
+
+.gh-credits-roll .gh-credit {
+  font-size: 1em;
+}
+
+/* ---------- Botón rápido de silencio ---------- */
+.gh-quick-mute {
+  position: absolute;
+  top: 1.3%;
+  right: 2.5%;
+  z-index: 9;
+  width: 7%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: #000;
+  color: var(--gh-yellow);
+  border: 3px solid var(--gh-white);
+  font-family: var(--gh-font);
+  font-size: 1.1em;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 #000;
+}
+
+.gh-quick-mute:hover {
+  color: var(--gh-orange);
+}
+
+.gh-quick-mute.is-muted {
+  color: var(--gh-gray);
+  text-decoration: line-through;
+  text-decoration-thickness: 3px;
+  text-decoration-color: var(--gh-red);
+}
+
+/* ---------- Animaciones ---------- */
+@keyframes gh-blink {
+  50% { opacity: 0; }
+}
+
+@keyframes gh-heartbeat {
+  50% { transform: scale(0.8); }
+}
+
+@keyframes gh-credit-glow {
+  from {
+    text-shadow: 2px 2px 0 #3a0820, 0 0 4px var(--gh-orange), 0 0 8px var(--gh-pink);
+  }
+  to {
+    text-shadow: 2px 2px 0 #3a0820, 0 0 10px var(--gh-yellow), 0 0 22px var(--gh-pink);
+  }
+}
+
+@keyframes gh-pop-in {
+  from { transform: scale(0.6); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes gh-float {
+  0%, 100% { margin-top: 0; }
+  50% { margin-top: -0.35em; }
+}
+
+@keyframes gh-low-hp {
+  50% { background-color: var(--gh-red); }
+}
+
+@keyframes gh-boss-border {
+  50% { border-color: var(--gh-orange); box-shadow: 0 0 12px rgba(255, 42, 58, 0.7); }
+}
+
+@keyframes gh-comm-open {
+  from { transform: scaleY(0.05); }
+  to { transform: scaleY(1); }
+}
+
+@keyframes gh-urgent {
+  50% { border-color: var(--gh-orange); box-shadow: 0 0 0 3px #000, 0 0 22px rgba(255, 42, 58, 0.8); }
+}
+
+@keyframes gh-bounce {
+  50% { transform: translateY(3px); }
+}
+
+@keyframes gh-alert-flash {
+  50% { opacity: 0.35; }
+}
+
+@keyframes gh-stripes {
+  from { background-position: 0 0; }
+  to { background-position: 40px 0; }
+}
+
+@keyframes gh-shake {
+  0% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  100% { transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gh-float-btn,
+  .gh-alert,
+  .gh-alert-stripe,
+  .gh-credit,
+  .gh-victory-title {
+    animation: none;
+  }
+}

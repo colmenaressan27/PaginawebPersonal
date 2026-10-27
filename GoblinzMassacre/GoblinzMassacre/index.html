@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="author" content="Santiago Colmenares">
+  <meta name="description" content="Goblinz Massacre — FPS retro de supervivencia por oleadas. Creado por Santiago Colmenares.">
+  <title>Goblinz Massacre</title>
+  <!-- Tipografías arcade / medievales (si no hay internet se usan las de respaldo) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Butcherman&family=Press+Start+2P&family=VT323&family=MedievalSharp&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ===================== JUEGO (vista 3D + HUD) ===================== -->
+  <div id="game">
+    <div id="view">
+      <canvas id="screen"></canvas>
+
+      <div id="crosshair"><span></span><span></span><span></span><span></span></div>
+      <div id="dmgDir"><div></div></div>
+      <div id="hurtFlash"></div>
+      <div id="pickupFlash"></div>
+      <div id="lowHp"></div>
+
+      <div id="topBar">
+        <div id="topWave">OLEADA 1</div>
+        <div id="topLeft">GOBLINS: 0</div>
+        <div id="topScore">0</div>
+      </div>
+      <div id="comboBox"></div>
+      <div id="announce"><div class="big"></div><div class="sub"></div></div>
+      <div id="feed"></div>
+      <canvas id="minimap" width="128" height="128"></canvas>
+      <div id="fps"></div>
+      <div id="lockHint" class="hidden">Haz clic para capturar el ratón</div>
+    </div>
+
+    <div id="hud">
+      <div class="hp-panel panel" id="pAmmo">
+        <div class="num" id="hudAmmo">50</div>
+        <div class="lbl" id="hudAmmoLbl">MUNICIÓN</div>
+      </div>
+      <div class="panel" id="pHp">
+        <div class="num" id="hudHp">100%</div>
+        <div class="lbl">SALUD</div>
+      </div>
+      <div class="panel" id="pArms">
+        <div id="hudArms">
+          <span id="arm1">1</span><span id="arm2">2</span><span id="arm3">3</span><span id="arm4">4</span><span id="arm5">5</span>
+        </div>
+        <div class="lbl" id="hudWeaponName">ESCUPEPLOMO</div>
+      </div>
+      <div class="panel face-panel"><canvas id="face" width="24" height="26"></canvas></div>
+      <div class="panel" id="pArmor">
+        <div class="num" id="hudArmor">0%</div>
+        <div class="lbl">ARMADURA</div>
+      </div>
+      <div class="panel" id="pGold">
+        <div class="num gold" id="hudGold">0</div>
+        <div class="lbl">ORO</div>
+      </div>
+      <div class="panel ammo-list" id="pAmmoList">
+        <div><b>BAL</b> <span id="amB">0</span>/<i id="amBm">300</i></div>
+        <div><b>CAR</b> <span id="amS">0</span>/<i id="amSm">60</i></div>
+        <div><b>COH</b> <span id="amR">0</span>/<i id="amRm">30</i></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="scanlines"></div>
+
+  <!-- ===================== PANTALLA INICIAL ===================== -->
+  <section id="splash" class="screen">
+    <h1 class="title"><span>Goblin</span><span class="z">z</span><br><span class="massacre">Massacre</span></h1>
+    <p class="blink press">— PULSA CUALQUIER TECLA O HAZ CLIC —</p>
+    <p class="tiny">Ponte audífonos. Los goblins chillan.</p>
+    <p class="author">Un juego de <b>Santiago Colmenares</b></p>
+  </section>
+
+  <!-- ===================== MENÚ PRINCIPAL ===================== -->
+  <section id="menu" class="screen hidden">
+    <h1 class="title"><span>Goblin</span><span class="z">z</span><br><span class="massacre">Massacre</span></h1>
+    <p class="tagline" id="tagline">Sobrevive a la horda verde.</p>
+    <nav class="menu-buttons">
+      <button class="btn" id="btnPlay">JUGAR</button>
+      <button class="btn" id="btnScores">SCOREBOARD</button>
+      <button class="btn" id="btnOptions">OPCIONES</button>
+      <button class="btn" id="btnCredits">CRÉDITOS</button>
+    </nav>
+    <p class="hint">WASD moverse · Ratón apuntar · Clic disparar · Q / rueda cambiar arma · Espacio saltar · Shift esquivar · Esc pausa</p>
+    <p class="hint warn hidden" id="mobileWarn">Este juego necesita teclado y ratón.</p>
+    <p class="author">Creado por <b>Santiago Colmenares</b> · v1.0</p>
+  </section>
+
+  <!-- ===================== SCOREBOARD ===================== -->
+  <section id="scores" class="screen hidden">
+    <h2 class="heading">SALÓN DE LOS MASACRADORES</h2>
+    <div class="board">
+      <table>
+        <thead><tr><th>#</th><th>NOMBRE</th><th>PUNTOS</th><th>OLEADA</th><th>BAJAS</th><th>FECHA</th></tr></thead>
+        <tbody id="scoreBody"></tbody>
+      </table>
+      <p class="empty hidden" id="scoreEmpty">Aún no hay masacres registradas.<br>Los goblins se ríen de ti.</p>
+    </div>
+    <div class="row-buttons">
+      <button class="btn small" id="btnClearScores">BORRAR RÉCORDS</button>
+      <button class="btn" id="btnScoresBack">VOLVER</button>
+    </div>
+  </section>
+
+  <!-- ===================== OPCIONES ===================== -->
+  <section id="options" class="screen hidden">
+    <h2 class="heading">OPCIONES</h2>
+    <div class="opts">
+      <label>Volumen general <input type="range" id="optMaster" min="0" max="100"><output></output></label>
+      <label>Música <input type="range" id="optMusic" min="0" max="100"><output></output></label>
+      <label>Efectos <input type="range" id="optSfx" min="0" max="100"><output></output></label>
+      <label>Sensibilidad del ratón <input type="range" id="optSens" min="10" max="300"><output></output></label>
+      <label>Campo de visión <input type="range" id="optFov" min="60" max="110"><output></output></label>
+      <label>Resolución
+        <select id="optRes">
+          <option value="240">240 · Pixel brutal</option>
+          <option value="320">320 · Clásico 1993</option>
+          <option value="400">400 · Nítido</option>
+          <option value="480">480 · Casi HD</option>
+        </select>
+      </label>
+      <label>Dificultad
+        <select id="optDiff">
+          <option value="0">Goblin bebé</option>
+          <option value="1">Masacre normal</option>
+          <option value="2">Pesadilla verde</option>
+        </select>
+      </label>
+      <label class="check">Invertir eje Y <input type="checkbox" id="optInvert"></label>
+      <label class="check">Sacudida de pantalla <input type="checkbox" id="optShake"></label>
+      <label class="check">Efecto CRT <input type="checkbox" id="optCrt"></label>
+      <label class="check">Minimapa <input type="checkbox" id="optMap"></label>
+      <label class="check">Mostrar FPS <input type="checkbox" id="optFps"></label>
+    </div>
+    <p class="hint" id="audioStatus"></p>
+    <details class="controls">
+      <summary>CONTROLES</summary>
+      <table>
+        <tr><td>W A S D / Flechas</td><td>Moverse</td></tr>
+        <tr><td>Ratón</td><td>Mirar (captura de puntero)</td></tr>
+        <tr><td>Clic izquierdo</td><td>Disparar / golpear</td></tr>
+        <tr><td>Q · Rueda · 1-5</td><td>Cambiar de arma</td></tr>
+        <tr><td>Espacio</td><td>Saltar</td></tr>
+        <tr><td>Shift</td><td>Esquive rápido (dash)</td></tr>
+        <tr><td>Tab</td><td>Mostrar / ocultar minimapa</td></tr>
+        <tr><td>M</td><td>Silenciar música</td></tr>
+        <tr><td>Esc / P</td><td>Pausa</td></tr>
+      </table>
+    </details>
+    <div class="row-buttons">
+      <button class="btn small" id="btnOptReset">RESTABLECER</button>
+      <button class="btn" id="btnOptBack">VOLVER</button>
+    </div>
+  </section>
+
+  <!-- ===================== CRÉDITOS ===================== -->
+  <section id="credits" class="screen hidden">
+    <h2 class="heading">CRÉDITOS</h2>
+    <div class="credits-roll">
+      <p class="big-credit">GOBLINZ MASSACRE</p>
+      <p>Un juego creado por</p>
+      <p class="name">SANTIAGO COLMENARES</p>
+      <p class="role">Idea, diseño y dirección</p>
+      <p class="name small-name">Santiago Colmenares</p>
+      <p class="role">Motor raycasting, pixel art y efectos generados por código</p>
+      <p class="name small-name">Hechos a mano, píxel a píxel</p>
+      <p class="role">Música</p>
+      <p class="name small-name">“Elmenu” y “Musicanivel”</p>
+      <p class="role">Inspirado en</p>
+      <p class="name small-name">Wolfenstein 3D · DOOM · las noches de 1993</p>
+      <p class="disclaimer">Ningún goblin fue maltratado durante el desarrollo.<br>Bueno… quizá unos cuantos miles.</p>
+    </div>
+    <button class="btn" id="btnCreditsBack">VOLVER</button>
+  </section>
+
+  <!-- ===================== PAUSA ===================== -->
+  <section id="pause" class="screen hidden">
+    <h2 class="heading">PAUSA</h2>
+    <p class="tagline">Los goblins te esperan… rascándose.</p>
+    <nav class="menu-buttons">
+      <button class="btn" id="btnResume">CONTINUAR</button>
+      <button class="btn" id="btnPauseOptions">OPCIONES</button>
+      <button class="btn" id="btnQuit">ABANDONAR</button>
+    </nav>
+  </section>
+
+  <!-- ===================== TIENDA ENTRE OLEADAS ===================== -->
+  <section id="shop" class="screen hidden">
+    <div class="shop-head">
+      <canvas id="merchant" width="48" height="48"></canvas>
+      <div>
+        <h2 class="heading">EL BAZAR DE GRUÑIDO EL TRAIDOR</h2>
+        <p class="tagline" id="shopQuote">“Vendo armas para matar a mis primos. Negocios son negocios.”</p>
+      </div>
+    </div>
+    <div class="shop-stats">
+      <span>ORO: <b class="gold" id="shopGold">0</b></span>
+      <span>SALUD: <b id="shopHp">100</b></span>
+      <span>ARMADURA: <b id="shopArmor">0</b></span>
+      <span>BALAS: <b id="shopB">0</b> · CART: <b id="shopS">0</b> · COH: <b id="shopR">0</b></span>
+    </div>
+    <div id="shopItems"></div>
+    <button class="btn big" id="btnNextWave">¡A LA MASACRE! — OLEADA 2</button>
+  </section>
+
+  <!-- ===================== GAME OVER ===================== -->
+  <section id="gameover" class="screen hidden">
+    <h2 class="title dead">TE HICIERON PURÉ</h2>
+    <p class="tagline" id="goQuote">Los goblins bailan sobre tu tumba.</p>
+    <div class="final-score">PUNTUACIÓN FINAL<br><b id="goScore">0</b></div>
+    <div class="go-stats">
+      <div>OLEADA<br><b id="goWave">1</b></div>
+      <div>BAJAS<br><b id="goKills">0</b></div>
+      <div>PRECISIÓN<br><b id="goAcc">0%</b></div>
+      <div>TIEMPO<br><b id="goTime">0:00</b></div>
+      <div>ORO GANADO<br><b id="goGold">0</b></div>
+    </div>
+    <div class="save-row" id="saveRow">
+      <input id="goName" maxlength="12" placeholder="TU NOMBRE" autocomplete="off" spellcheck="false">
+      <button class="btn small" id="btnSaveScore">GUARDAR</button>
+    </div>
+    <p class="hint" id="saveMsg"></p>
+    <nav class="row-buttons">
+      <button class="btn" id="btnRetry">REINTENTAR</button>
+      <button class="btn" id="btnGoScores">SCOREBOARD</button>
+      <button class="btn" id="btnGoMenu">MENÚ</button>
+    </nav>
+    <p class="author">Goblinz Massacre · creado por <b>Santiago Colmenares</b></p>
+  </section>
+
+  <!-- ===================== MÚSICA (archivos locales) ===================== -->
+  <audio id="musicMenu" src="Elmenu.mp3" loop preload="auto"></audio>
+  <audio id="musicLevel" src="Musicanivel.mp3" loop preload="auto"></audio>
+
+  <script src="script.js"></script>
+</body>
+</html>

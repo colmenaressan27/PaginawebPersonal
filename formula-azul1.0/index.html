@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="FÓRMULA AZUL: Escuadrón de Limpieza. Rail shooter 3D arcade cooperativo para 2 jugadores: el PC es la máquina y cada celular es una pistola óptica.">
+  <meta name="theme-color" content="#050a12">
+  <meta name="color-scheme" content="dark">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Fórmula Azul">
+  <title>FÓRMULA AZUL · Escuadrón de Limpieza — Nivel 1</title>
+
+  <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png">
+  <link rel="apple-touch-icon" href="img/icon-192.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@700&amp;family=VT323&amp;display=swap">
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Three.js (motor 3D, Entrega 3) como módulo ES -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+  <!-- PeerJS (WebRTC PC ⇄ celulares, Entrega 2) y generador de QR para la sala -->
+  <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js" defer></script>
+  <script type="module" src="script.js"></script>
+</head>
+
+<!--
+  Rol del dispositivo (lo alterna script.js en <body>):
+    .role-pending → aún no se elige (se ve la máquina arcade)
+    .role-arcade  → este dispositivo es la Pantalla Arcade (PC)
+    .role-gun     → este dispositivo es un Mando Pistola (celular)
+  El contrato completo de clases de estado está al inicio de style.css.
+-->
+<body class="app role-pending">
+
+  <!-- Filtro SVG para la aberración cromática HQ (se activa con .opt-rgb-hq en #arcade) -->
+  <svg class="svg-defs" aria-hidden="true" focusable="false" width="0" height="0">
+    <defs>
+      <filter id="crt-rgb-split" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+        <feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="red"/>
+        <feOffset in="red" dx="-2" dy="0" result="redShift"/>
+        <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="green"/>
+        <feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="blue"/>
+        <feOffset in="blue" dx="2" dy="0" result="blueShift"/>
+        <feBlend in="redShift" in2="green" mode="screen" result="redGreen"/>
+        <feBlend in="redGreen" in2="blueShift" mode="screen"/>
+      </filter>
+    </defs>
+  </svg>
+
+  <noscript>
+    <p class="noscript-msg">FÓRMULA AZUL necesita JavaScript activado para funcionar.</p>
+  </noscript>
+
+  <main id="app" class="app-shell">
+
+    <!-- ══════════════════════════════════════════════════════════
+         MÁQUINA ARCADE (PANTALLA DEL PC)
+         ══════════════════════════════════════════════════════════ -->
+    <section id="arcade" class="cabinet is-solo" aria-labelledby="arcade-title">
+      <h1 id="arcade-title" class="visually-hidden">Fórmula Azul — Pantalla Arcade</h1>
+
+      <div class="crt is-standby" id="crt">
+        <div class="crt-screen" id="crt-screen">
+
+          <!-- Render 3D a 320×240 escalado con image-rendering: pixelated -->
+          <canvas id="game-canvas" class="layer-canvas game-canvas" width="320" height="240">
+            Tu navegador no soporta WebGL. Usa Chrome, Edge o Firefox actualizados.
+          </canvas>
+
+          <!-- Capa 2D a la misma resolución: miras J1/J2, marcadores de impacto y puntos flotantes -->
+          <canvas id="hud-canvas" class="layer-canvas hud-canvas" width="320" height="240" aria-hidden="true"></canvas>
+
+          <!-- Viñeta permanente del visor (damage-lvl-1 / damage-lvl-2 / damage-critical) -->
+          <div id="damage-p1" class="fx fx-damage fx-damage--p1" aria-hidden="true"></div>
+          <div id="damage-p2" class="fx fx-damage fx-damage--p2" aria-hidden="true"></div>
+
+          <!-- ─────────────── VISTA 0 · ENCENDIDO ─────────────── -->
+          <section id="view-boot" class="view view-boot is-active" aria-labelledby="boot-title">
+            <header class="boot-header">
+              <p class="boot-bios">FA-BIOS v1.0 · PIPELINE PS1/N64 · 320×240</p>
+              <p class="boot-bios">MEMORIA DE VÍDEO ......... OK</p>
+              <p class="boot-bios">SENSOR ÓPTICO ........... EN ESPERA</p>
+              <h2 id="boot-title" class="boot-title">SIN SEÑAL</h2>
+            </header>
+
+            <button type="button" id="btn-power" class="btn-power" aria-describedby="boot-warning-text">
+              <span class="btn-power-icon" aria-hidden="true">⏻</span>
+              <span class="btn-power-label">ENCENDER MÁQUINA</span>
+            </button>
+
+            <aside class="boot-warning" aria-labelledby="boot-warning-title">
+              <h3 id="boot-warning-title" class="boot-warning-title">⚠ ADVERTENCIA DE FOTOSENSIBILIDAD</h3>
+              <p id="boot-warning-text" class="boot-warning-text">
+                Cada disparo produce un destello blanco de pantalla completa, como en las pistolas ópticas de los arcades.
+                Si eres sensible a las luces intermitentes, activa «Reducir destellos» en Ajustes.
+              </p>
+            </aside>
+
+            <p class="boot-hint">El sonido se activa al encender · <kbd>ENTER</kbd></p>
+          </section>
+
+          <!-- ─────────────── VISTA 1 · MENÚ (ATTRACT MODE) ─────────────── -->
+          <section id="view-menu" class="view view-menu" aria-labelledby="menu-title">
+            <header class="title-block">
+              <p class="title-kicker">NIVEL 1 · DISTRITO CERO</p>
+              <h2 id="menu-title" class="game-title">
+                <span class="game-title-main" data-text="FÓRMULA AZUL">FÓRMULA AZUL</span>
+                <span class="game-title-sub">ESCUADRÓN DE LIMPIEZA</span>
+              </h2>
+            </header>
+
+            <p class="insert-coin">
+              <span class="insert-coin-a">INSERT COIN</span>
+              <span class="insert-coin-b">CONECTA TUS CELULARES</span>
+            </p>
+
+            <!-- Selección de modo del dispositivo -->
+            <nav class="mode-select" aria-labelledby="mode-title">
+              <h3 id="mode-title" class="panel-title">ELIGE EL MODO DE ESTE DISPOSITIVO</h3>
+              <ul class="mode-list">
+                <li>
+                  <button type="button" id="btn-mode-arcade" class="mode-btn is-focused" data-mode="arcade">
+                    <img class="pixel-icon" src="img/icon-monitor.png" alt="" width="16" height="16">
+                    <span class="mode-label">PANTALLA ARCADE</span>
+                    <span class="mode-desc">Este PC es la máquina</span>
+                  </button>
+                </li>
+                <li>
+                  <button type="button" id="btn-mode-gun" class="mode-btn" data-mode="gun">
+                    <img class="pixel-icon" src="img/icon-lightgun.png" alt="" width="16" height="16">
+                    <span class="mode-label">MANDO PISTOLA</span>
+                    <span class="mode-desc">Jugador 1 / Jugador 2 · celular</span>
+                  </button>
+                </li>
+              </ul>
+              <p class="controls-hint">
+                <kbd>↑</kbd><kbd>↓</kbd> elegir · <kbd>ENTER</kbd> confirmar · <kbd>A</kbd> ajustes
+              </p>
+            </nav>
+
+            <!-- Sala de espera: aparece con .is-lobby en #view-menu -->
+            <aside id="lobby" class="lobby" aria-labelledby="lobby-title">
+              <h3 id="lobby-title" class="lobby-title">
+                SALA <strong id="room-code" class="room-code">----</strong>
+              </h3>
+              <p class="lobby-url">
+                Abre en el celular: <code id="room-url" class="room-url">conectando…</code>
+              </p>
+
+              <ul class="player-slots">
+                <li id="slot-p1" class="slot slot--p1">
+                  <figure class="slot-qr">
+                    <canvas id="qr-p1" class="qr-canvas" width="132" height="132" role="img" aria-label="Código QR para conectar el Jugador 1"></canvas>
+                    <figcaption class="slot-qr-caption">ESCANEA · J1</figcaption>
+                  </figure>
+                  <img class="slot-portrait" src="img/portrait-p1.png" alt="Retrato de VEGA con máscara antirradiación" width="32" height="32">
+                  <p class="slot-name">J1 · VEGA</p>
+                  <p id="slot-status-p1" class="slot-status" role="status">ESPERANDO SEÑAL…</p>
+                </li>
+                <li id="slot-p2" class="slot slot--p2">
+                  <figure class="slot-qr">
+                    <canvas id="qr-p2" class="qr-canvas" width="132" height="132" role="img" aria-label="Código QR para conectar el Jugador 2"></canvas>
+                    <figcaption class="slot-qr-caption">ESCANEA · J2</figcaption>
+                  </figure>
+                  <img class="slot-portrait" src="img/portrait-p2.png" alt="Retrato de SOLANO con máscara antirradiación" width="32" height="32">
+                  <p class="slot-name">J2 · SOLANO</p>
+                  <p id="slot-status-p2" class="slot-status" role="status">ESPERANDO SEÑAL…</p>
+                </li>
+              </ul>
+
+              <p id="press-start" class="press-start">PULSA <kbd>ENTER</kbd> O DISPARA PARA EMPEZAR</p>
+              <p class="lobby-hint"><kbd>M</kbd> ratón como pistola J1 (pruebas) · <kbd>ESC</kbd> volver</p>
+            </aside>
+
+            <!-- Tabla de récords: se alterna con la selección de modo mediante .show-scores -->
+            <aside class="hiscores" aria-labelledby="hiscores-title">
+              <h3 id="hiscores-title" class="panel-title">RÉCORDS · DISTRITO CERO</h3>
+              <ol id="hiscore-list" class="hiscore-list">
+                <li class="hiscore"><span class="hs-name">AZU</span><span class="hs-score">080000</span></li>
+                <li class="hiscore"><span class="hs-name">FA7</span><span class="hs-score">065000</span></li>
+                <li class="hiscore"><span class="hs-name">LDO</span><span class="hs-score">050000</span></li>
+                <li class="hiscore"><span class="hs-name">CRT</span><span class="hs-score">035000</span></li>
+                <li class="hiscore"><span class="hs-name">PS1</span><span class="hs-score">020000</span></li>
+              </ol>
+            </aside>
+
+            <footer class="menu-footer">
+              <p class="credits">CRÉDITOS <span id="credits" class="credits-value">LIBRE</span></p>
+              <p class="copyright">© 2026 · FÓRMULA AZUL</p>
+            </footer>
+          </section>
+
+          <!-- ─────────────── VISTA 2 · CINEMÁTICA DE INTRO ─────────────── -->
+          <section id="view-intro" class="view view-intro" aria-labelledby="intro-title">
+            <h2 id="intro-title" class="visually-hidden">Cinemática de introducción</h2>
+            <div class="letterbox letterbox--top" aria-hidden="true"></div>
+            <div class="letterbox letterbox--bottom" aria-hidden="true"></div>
+
+            <!-- Guion: script.js marca la línea activa con .is-current y la toma 3D con data-shot -->
+            <ol id="intro-script" class="intro-script">
+              <li class="intro-line" data-shot="world">AÑO 2031. EL REACTOR «GÉNESIS» DE VERDANT CORP. SE FRACTURA.</li>
+              <li class="intro-line" data-shot="spread">UNA BABA VERDE RADIACTIVA CUBRE EL PLANETA Y MUTA TODO LO QUE TOCA.</li>
+              <li class="intro-line" data-shot="city">LAS CIUDADES CAEN. LOS CONTAMINADOS YA NO SON HUMANOS.</li>
+              <li class="intro-line" data-shot="formula">SOLO UNA SUSTANCIA LOS PURIFICA: LA FÓRMULA AZUL.</li>
+              <li class="intro-line" data-shot="squad">SE ACTIVA EL ESCUADRÓN DE LIMPIEZA.</li>
+              <li class="intro-line" data-shot="drop">DESTINO: DISTRITO CERO. ORDEN: PURIFICAR.</li>
+            </ol>
+
+            <figure id="intro-card-p1" class="intro-card intro-card--p1">
+              <img class="intro-card-portrait" src="img/portrait-p1.png" alt="VEGA con traje NBQ táctico y máscara antirradiación de visor cian" width="32" height="32">
+              <figcaption class="intro-card-text">
+                <strong class="intro-card-name">PURGA-01 «VEGA»</strong>
+                <span class="intro-card-spec">Traje NBQ táctico · Máscara M-50X</span>
+                <span class="intro-card-spec">Rifle FA-7 + lanzagranadas LG-40</span>
+              </figcaption>
+            </figure>
+
+            <figure id="intro-card-p2" class="intro-card intro-card--p2">
+              <img class="intro-card-portrait" src="img/portrait-p2.png" alt="SOLANO con traje NBQ táctico y máscara antirradiación de visor cian" width="32" height="32">
+              <figcaption class="intro-card-text">
+                <strong class="intro-card-name">PURGA-02 «SOLANO»</strong>
+                <span class="intro-card-spec">Traje NBQ táctico · Máscara M-50X</span>
+                <span class="intro-card-spec">Rifle FA-7 + lanzagranadas LG-40</span>
+              </figcaption>
+            </figure>
+
+            <p class="skip-hint">DISPARA O PULSA <kbd>ENTER</kbd> PARA SALTAR</p>
+          </section>
+
+          <!-- ─────────────── VISTA 3 · PARTIDA (HUD) ─────────────── -->
+          <section id="view-game" class="view view-game" aria-labelledby="game-title">
+            <h2 id="game-title" class="visually-hidden">Nivel 1 — Distrito Cero</h2>
+
+            <header class="hud-top">
+              <!-- Jugador 1 -->
+              <article id="hud-p1" class="player-hud player-hud--p1" aria-labelledby="hud-p1-name">
+                <figure class="hud-portrait">
+                  <span id="portrait-p1" class="portrait portrait--p1" role="img" aria-label="Retrato de VEGA"></span>
+                </figure>
+                <section class="hud-data">
+                  <h3 class="hud-name"><span class="hud-tag">J1</span> <span id="hud-p1-name">VEGA</span></h3>
+                  <p class="hud-score"><span class="visually-hidden">Puntos: </span><output id="score-p1">000000</output></p>
+                  <ol id="life-p1" class="life-bar" aria-label="Vida de J1: 5 de 5">
+                    <li class="life-cell"></li>
+                    <li class="life-cell"></li>
+                    <li class="life-cell"></li>
+                    <li class="life-cell"></li>
+                    <li class="life-cell"></li>
+                  </ol>
+                  <ol id="ammo-p1" class="ammo-bar" aria-label="Munición de J1: 12 de 12">
+                    <li class="ammo-cell"></li><li class="ammo-cell"></li><li class="ammo-cell"></li>
+                    <li class="ammo-cell"></li><li class="ammo-cell"></li><li class="ammo-cell"></li>
+                    <li class="ammo-cell"></li><li class="ammo-cell"></li><li class="ammo-cell"></li>
+                    <li class="ammo-cell"></li><li class="ammo-cell"></li><li class="ammo-cell"></li>
+                  </ol>
+                  <ol id="grenades-p1" class="grenade-bar" aria-label="Granadas de J1: 3 de 3">
+                    <li class="grenade-cell"></li>
+                    <li class="grenade-cell"></li>
+                    <li class="grenade-cell"></li>
+                  </ol>
+                </section>
+                <p class="hud-alert hud-alert--reload">¡AGITA!</p>
+                <p class="hud-alert hud-alert--reloading">RECARGANDO</p>
+                <p class="hud-alert hud-alert--offline">SEÑAL PERDIDA</p>
+                <p class="hud-join">J1 · CONECTA TU CELULAR</p>
+              </article>
+
+              <!-- Centro: tramo y progreso del riel -->
+              <section class="hud-center" aria-labelledby="stage-label">
+                <h3 id="stage-label" class="stage-label">
+                  <span class="stage-num">1-<span id="stage-section">1</span></span>
+                  <span class="stage-name">DISTRITO CERO</span>
+                </h3>
+                <progress id="rail-progress" class="rail-progress" max="100" value="0">0 %</progress>
+              </section>
+
+              <!-- Jugador 2 -->
+              <article id="hud-p2" class="player-hud player-hud--p2 is-inactive" aria-labelledby="hud-p2-name">
+                <figure class="hud-portrait">
+                  <span id="portrait-p2" class="portrait portrait--p2" role="img" aria-label="Retrato de SOLANO"></span>
+                </figure>
+                <section class="hud-data">
+                  <h3 class="hud-name"><span class="hud-tag">J2</span> <span id="hud-p2-name">SOLANO</span></h3>
+                  <p class="hud-score"><span class="visually-hidden">Puntos: </span><output id="score-p2">000000</output></p>
+                  <ol id="life-p2" class="life-bar" aria-label="Vida de J2: 5 de 5">
+                    <li class="life-cell"></li>
+                    <li class="life-cell"></li>
+                    <li class="life-cell"></li>
+                    <li class="life-cell"></li>
+                    <li class="life-cell"></li>
+                  </ol>
+                  <ol id="ammo-p2" class="ammo-bar" aria-label="Munición de J2: 12 de 12">
+                    <li class="ammo-cell"></li><li class="ammo-cell"></li><li class="ammo-cell"></li>
+                    <li class="ammo-cell"></li><li class="ammo-cell"></li><li class="ammo-cell"></li>
+                    <li class="ammo-cell"></li><li class="ammo-cell"></li><li class="ammo-cell"></li>
+                    <li class="ammo-cell"></li><li class="ammo-cell"></li><li class="ammo-cell"></li>
+                  </ol>
+                  <ol id="grenades-p2" class="grenade-bar" aria-label="Granadas de J2: 3 de 3">
+                    <li class="grenade-cell"></li>
+                    <li class="grenade-cell"></li>
+                    <li class="grenade-cell"></li>
+                  </ol>
+                </section>
+                <p class="hud-alert hud-alert--reload">¡AGITA!</p>
+                <p class="hud-alert hud-alert--reloading">RECARGANDO</p>
+                <p class="hud-alert hud-alert--offline">SEÑAL PERDIDA</p>
+                <p class="hud-join">J2 · CONECTA TU CELULAR</p>
+              </article>
+            </header>
+
+            <!-- Avisos centrales: se muestran con .is-visible -->
+            <section class="hud-banners" aria-live="assertive" aria-label="Avisos de la misión">
+              <p id="banner-stage" class="banner banner--stage">
+                <span class="banner-kicker">NIVEL 1</span>
+                <span class="banner-main">DISTRITO CERO</span>
+                <span class="banner-sub">¡PURIFICAD LA CIUDAD!</span>
+              </p>
+              <p id="banner-warning" class="banner banner--warning">
+                <span class="banner-main">⚠ WARNING ⚠</span>
+                <span class="banner-sub">ALERTA BIOLÓGICA CLASE OMEGA</span>
+              </p>
+              <p id="banner-heal" class="banner banner--heal">
+                <span class="banner-main">+1 VIDA</span>
+                <span class="banner-sub">BOTIQUÍN PURIFICADO</span>
+              </p>
+              <p id="banner-clear" class="banner banner--clear">
+                <span class="banner-main">ZONA LIMPIA</span>
+              </p>
+            </section>
+
+            <footer class="hud-bottom">
+              <!-- Barra del Boss: visible con .is-boss en #view-game -->
+              <section id="boss-bar" class="boss-bar" aria-labelledby="boss-name">
+                <h3 id="boss-name" class="boss-name">MADRE BABA · COLOSO RADIACTIVO</h3>
+                <meter id="boss-health" class="boss-meter" min="0" max="100" low="25" high="60" optimum="100" value="100">100 %</meter>
+              </section>
+            </footer>
+          </section>
+
+          <!-- ─────────────── VISTA 4 · RESULTADOS / GAME OVER ─────────────── -->
+          <section id="view-results" class="view view-results is-clear" aria-labelledby="results-title">
+            <h2 id="results-title" class="results-title">
+              <span class="results-title-clear">NIVEL 1 PURIFICADO</span>
+              <span class="results-title-over">GAME OVER</span>
+            </h2>
+
+            <table class="results-table">
+              <caption class="results-caption">INFORME DE MISIÓN</caption>
+              <thead>
+                <tr>
+                  <th scope="col">DATO</th>
+                  <th scope="col" class="col-p1">J1 VEGA</th>
+                  <th scope="col" class="col-p2">J2 SOLANO</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">PUNTOS</th>
+                  <td id="res-score-p1" class="col-p1">000000</td>
+                  <td id="res-score-p2" class="col-p2">000000</td>
+                </tr>
+                <tr>
+                  <th scope="row">PURIFICADOS</th>
+                  <td id="res-kills-p1" class="col-p1">0</td>
+                  <td id="res-kills-p2" class="col-p2">0</td>
+                </tr>
+                <tr>
+                  <th scope="row">PRECISIÓN</th>
+                  <td id="res-accuracy-p1" class="col-p1">0 %</td>
+                  <td id="res-accuracy-p2" class="col-p2">0 %</td>
+                </tr>
+                <tr>
+                  <th scope="row">GRANADAS</th>
+                  <td id="res-grenades-p1" class="col-p1">0</td>
+                  <td id="res-grenades-p2" class="col-p2">0</td>
+                </tr>
+                <tr>
+                  <th scope="row">BOTIQUINES</th>
+                  <td id="res-medkits-p1" class="col-p1">0</td>
+                  <td id="res-medkits-p2" class="col-p2">0</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <form id="initials-form" class="initials-form" autocomplete="off">
+              <fieldset class="initials-fieldset">
+                <legend class="initials-legend">¡NUEVO RÉCORD! INICIALES</legend>
+                <label class="initials-label" for="initials-p1">J1</label>
+                <input id="initials-p1" class="initials-input" name="p1" type="text" maxlength="3" pattern="[A-Za-z0-9]{3}" autocapitalize="characters" spellcheck="false">
+                <label class="initials-label" for="initials-p2">J2</label>
+                <input id="initials-p2" class="initials-input" name="p2" type="text" maxlength="3" pattern="[A-Za-z0-9]{3}" autocapitalize="characters" spellcheck="false">
+                <button type="submit" class="btn btn--small">GUARDAR</button>
+              </fieldset>
+            </form>
+
+            <p class="press-start">PULSA <kbd>ENTER</kbd> PARA VOLVER AL MENÚ</p>
+          </section>
+
+          <!-- Destello rojo de daño en los bordes (.is-hit) -->
+          <div id="hit-p1" class="fx fx-hit fx-hit--p1" aria-hidden="true"></div>
+          <div id="hit-p2" class="fx fx-hit fx-hit--p2" aria-hidden="true"></div>
+
+          <!-- Pila del filtro CRT -->
+          <div class="fx fx-crt fx-crt-scanlines" aria-hidden="true"></div>
+          <div class="fx fx-crt fx-crt-aperture" aria-hidden="true"></div>
+          <div class="fx fx-crt fx-crt-aberration" aria-hidden="true"></div>
+          <div class="fx fx-crt fx-crt-rollbar" aria-hidden="true"></div>
+          <div class="fx fx-crt fx-crt-glass" aria-hidden="true"></div>
+
+          <!-- Flash óptico de 1 fotograma (.is-on durante un requestAnimationFrame) -->
+          <div id="lightgun-flash" class="fx fx-lightgun-flash" aria-hidden="true"></div>
+        </div>
+      </div>
+
+      <!-- Notificaciones (conexión, calibración, desconexión) -->
+      <section class="toasts" aria-label="Notificaciones">
+        <ul id="toast-list" class="toast-list" aria-live="polite"></ul>
+      </section>
+
+      <!-- Pistas musicales: el gestor de audio (Entrega 2) las enruta por Web Audio para el crossfade -->
+      <audio id="music-intro" class="music-track" src="audio/introgame.mp3" preload="auto" loop></audio>
+      <audio id="music-level1" class="music-track" src="audio/level1track.mp3" preload="auto" loop></audio>
+
+      <!-- ── Diálogos de la máquina ── -->
+      <dialog id="dialog-pause" class="dialog dialog--pause" aria-labelledby="pause-title">
+        <form method="dialog" class="dialog-body">
+          <h2 id="pause-title" class="dialog-title">PAUSA</h2>
+          <menu class="dialog-actions">
+            <li><button type="submit" value="resume" class="btn btn--primary" autofocus>CONTINUAR</button></li>
+            <li><button type="submit" value="settings" class="btn">AJUSTES</button></li>
+            <li><button type="submit" value="quit" class="btn btn--danger">SALIR AL MENÚ</button></li>
+          </menu>
+        </form>
+      </dialog>
+
+      <dialog id="dialog-continue" class="dialog dialog--continue" aria-labelledby="continue-title">
+        <form method="dialog" class="dialog-body">
+          <h2 id="continue-title" class="dialog-title">¿CONTINUAR, <span id="continue-player">J1</span>?</h2>
+          <p class="continue-count"><output id="continue-count">9</output></p>
+          <p class="dialog-text">Dispara o pulsa ENTER para volver a la acción</p>
+          <menu class="dialog-actions">
+            <li><button type="submit" value="continue" class="btn btn--primary" autofocus>CONTINUAR</button></li>
+            <li><button type="submit" value="giveup" class="btn btn--danger">RENDIRSE</button></li>
+          </menu>
+        </form>
+      </dialog>
+
+      <dialog id="dialog-settings" class="dialog dialog--settings" aria-labelledby="settings-title">
+        <form id="settings-form" method="dialog" class="dialog-body">
+          <h2 id="settings-title" class="dialog-title">AJUSTES</h2>
+
+          <fieldset class="settings-group">
+            <legend class="settings-legend">AUDIO</legend>
+            <label class="settings-row">
+              <span class="settings-label">MÚSICA</span>
+              <input id="vol-music" class="range" name="music" type="range" min="0" max="100" step="5" value="80">
+            </label>
+            <label class="settings-row">
+              <span class="settings-label">EFECTOS</span>
+              <input id="vol-sfx" class="range" name="sfx" type="range" min="0" max="100" step="5" value="90">
+            </label>
+          </fieldset>
+
+          <fieldset class="settings-group">
+            <legend class="settings-legend">VÍDEO</legend>
+            <label class="settings-row settings-row--check">
+              <input id="opt-crt" class="check" name="crt" type="checkbox" checked>
+              <span class="settings-label">FILTRO CRT</span>
+            </label>
+            <label class="settings-row settings-row--check">
+              <input id="opt-rgb-hq" class="check" name="rgbHq" type="checkbox">
+              <span class="settings-label">ABERRACIÓN CROMÁTICA HQ</span>
+            </label>
+            <label class="settings-row settings-row--check">
+              <input id="opt-vertex-snap" class="check" name="vertexSnap" type="checkbox" checked>
+              <span class="settings-label">TEMBLOR POLIGONAL PS1</span>
+            </label>
+            <label class="settings-row settings-row--check">
+              <input id="opt-reduce-flash" class="check" name="reduceFlash" type="checkbox">
+              <span class="settings-label">REDUCIR DESTELLOS</span>
+            </label>
+          </fieldset>
+
+          <fieldset class="settings-group">
+            <legend class="settings-legend">CONTROLES</legend>
+            <label class="settings-row settings-row--check">
+              <input id="opt-mouse" class="check" name="mouse" type="checkbox">
+              <span class="settings-label">RATÓN COMO PISTOLA J1</span>
+            </label>
+          </fieldset>
+
+          <menu class="dialog-actions">
+            <li><button type="submit" value="close" class="btn btn--primary">LISTO</button></li>
+          </menu>
+        </form>
+      </dialog>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════
+         MANDO PISTOLA (CELULAR SUJETADO A DOS MANOS)
+         ══════════════════════════════════════════════════════════ -->
+    <section id="gun" class="gun player-1" aria-labelledby="gun-title">
+      <h1 id="gun-title" class="visually-hidden">Fórmula Azul — Mando Pistola</h1>
+
+      <!-- Paso 1 · Enlace con la máquina -->
+      <section id="gun-join" class="gun-step gun-join is-active" aria-labelledby="join-title">
+        <header class="join-header">
+          <img class="pixel-icon pixel-icon--xl" src="img/icon-lightgun.png" alt="" width="16" height="16">
+          <h2 id="join-title" class="join-title">MANDO PISTOLA</h2>
+          <p class="join-text">
+            Sujeta el celular con las dos manos, pantalla hacia arriba y el borde superior apuntando al monitor.
+          </p>
+        </header>
+
+        <form id="join-form" class="join-form" autocomplete="off">
+          <label class="join-label" for="join-room">CÓDIGO DE SALA</label>
+          <input id="join-room" class="join-input" name="room" type="text" inputmode="text" minlength="4" maxlength="4" pattern="[A-Za-z0-9]{4}" placeholder="K7QX" autocapitalize="characters" spellcheck="false" required>
+
+          <fieldset class="join-players">
+            <legend class="join-label">JUGADOR</legend>
+            <input id="join-p1" class="player-radio" name="player" type="radio" value="1" checked>
+            <label for="join-p1" class="player-chip player-chip--p1">
+              <img class="player-chip-portrait" src="img/portrait-p1.png" alt="" width="32" height="32">
+              <span class="player-chip-name">J1 · VEGA</span>
+            </label>
+            <input id="join-p2" class="player-radio" name="player" type="radio" value="2">
+            <label for="join-p2" class="player-chip player-chip--p2">
+              <img class="player-chip-portrait" src="img/portrait-p2.png" alt="" width="32" height="32">
+              <span class="player-chip-name">J2 · SOLANO</span>
+            </label>
+          </fieldset>
+
+          <button id="btn-join" type="submit" class="btn btn--primary btn--block">CONECTAR Y ACTIVAR SENSORES</button>
+          <p id="join-status" class="join-status" role="status">El giroscopio necesita HTTPS y tu permiso.</p>
+        </form>
+      </section>
+
+      <!-- Paso 2 · Panel trasero táctico del arma -->
+      <section id="gun-pad" class="gun-step gun-pad" aria-labelledby="pad-title">
+        <h2 id="pad-title" class="visually-hidden">Panel trasero del rifle FA-7</h2>
+
+        <!-- Zona superior: estado, tanque de Fórmula Azul, granadas y calibración -->
+        <header class="pad-top">
+          <p class="pad-link">
+            <span class="led led--link" aria-hidden="true"></span>
+            <span id="pad-link-text" class="pad-link-text">SIN ENLACE</span>
+          </p>
+          <p id="pad-player" class="pad-player">J1 · VEGA</p>
+
+          <section class="tank" aria-labelledby="tank-title">
+            <h3 id="tank-title" class="tank-title">FÓRMULA AZUL</h3>
+            <ol id="pad-ammo" class="tank-cells" aria-label="Munición: 12 de 12">
+              <li class="tank-cell"></li><li class="tank-cell"></li><li class="tank-cell"></li>
+              <li class="tank-cell"></li><li class="tank-cell"></li><li class="tank-cell"></li>
+              <li class="tank-cell"></li><li class="tank-cell"></li><li class="tank-cell"></li>
+              <li class="tank-cell"></li><li class="tank-cell"></li><li class="tank-cell"></li>
+            </ol>
+            <p class="tank-count"><output id="pad-ammo-count">12</output><span class="tank-max">/12</span></p>
+          </section>
+
+          <section class="rack" aria-labelledby="rack-title">
+            <h3 id="rack-title" class="tank-title">GRANADAS</h3>
+            <ol id="pad-grenades" class="rack-cells" aria-label="Granadas: 3 de 3">
+              <li class="rack-cell"></li>
+              <li class="rack-cell"></li>
+              <li class="rack-cell"></li>
+            </ol>
+          </section>
+
+          <p class="pad-status">
+            <span class="pad-msg pad-msg--ready">LISTO PARA DISPARAR</span>
+            <span class="pad-msg pad-msg--empty">¡AGITA PARA RECARGAR!</span>
+            <span class="pad-msg pad-msg--reloading">RECARGANDO…</span>
+            <span class="pad-msg pad-msg--paused">PAUSA</span>
+          </p>
+
+          <p class="pad-lock">
+            <span class="led led--lock" aria-hidden="true"></span>
+            <span class="pad-lock-text">MIRA ESTABILIZADA</span>
+          </p>
+
+          <menu class="pad-tools">
+            <li><button id="btn-calibrate" type="button" class="btn btn--calibrate">◎ CALIBRAR CENTRO</button></li>
+            <li><button id="btn-pad-pause" type="button" class="btn btn--icon" aria-label="Pausar partida">II</button></li>
+          </menu>
+        </header>
+
+        <!-- Mitad inferior: un gatillo por pulgar -->
+        <section class="pad-triggers" aria-label="Gatillos">
+          <button id="trigger-grenade" type="button" class="trigger trigger--grenade">
+            <img class="trigger-icon" src="img/icon-grenade.png" alt="" width="16" height="16">
+            <span class="trigger-label">LANZA&shy;GRANADAS</span>
+            <span class="trigger-thumb">PULGAR IZQUIERDO</span>
+          </button>
+          <button id="trigger-fire" type="button" class="trigger trigger--fire">
+            <span class="trigger-reticle" aria-hidden="true"></span>
+            <span class="trigger-label">GATILLO</span>
+            <span class="trigger-thumb">PULGAR DERECHO</span>
+          </button>
+        </section>
+      </section>
+
+      <!-- Calibración del giroscopio -->
+      <dialog id="dialog-calibrate" class="dialog dialog--calibrate" aria-labelledby="calibrate-title">
+        <form method="dialog" class="dialog-body">
+          <h2 id="calibrate-title" class="dialog-title">CALIBRAR CENTRO</h2>
+          <ol class="calibrate-steps">
+            <li>Sujeta el celular con las dos manos, como el arma.</li>
+            <li>Apunta el borde superior al centro del monitor.</li>
+            <li>Quédate quieto y pulsa FIJAR CENTRO.</li>
+          </ol>
+          <p class="settings-row">
+            <label class="settings-label" for="aim-range">ÁNGULO MÁXIMO</label>
+            <output id="aim-range-value" class="settings-value" for="aim-range">30°</output>
+          </p>
+          <input id="aim-range" class="range range--wide" name="maxAngle" type="range" min="15" max="45" step="1" value="30" aria-describedby="aim-range-help">
+          <p id="aim-range-help" class="dialog-text">Menos grados = mira más rápida · Más grados = más precisión</p>
+          <menu class="dialog-actions">
+            <li><button type="submit" value="set" class="btn btn--primary" autofocus>FIJAR CENTRO</button></li>
+            <li><button type="submit" value="cancel" class="btn">CANCELAR</button></li>
+          </menu>
+        </form>
+      </dialog>
+    </section>
+
+  </main>
+</body>
+</html>

@@ -1,0 +1,26 @@
+CARPETA img/ — Recursos gráficos opcionales de Dimension Strikers
+===================================================================
+
+El juego funciona sin ninguna imagen: todos los personajes, retratos, balón,
+estadio y efectos se dibujan con pixel art procedural en el <canvas>.
+
+Cuando tengas arte propio, colócalo aquí y regístralo en la constante
+ASSET_MANIFEST al inicio de script.js (sección 01). Así el navegador no
+intenta descargar archivos que aún no existen (cero errores 404 en consola).
+
+1) Retratos (selección, diálogos y cut-in del Supertiro)
+   img/portraits/<id>.png   — cuadrado, recomendado 64x64 px (pixel art).
+
+2) Hojas de sprites de campo
+   img/sprites/<id>.png     — tira horizontal de cuadros de 40x44 px,
+   mirando a la DERECHA, en el orden de la constante SPRITE_POSES
+   (idle0, idle1, run0, run1, run2, run3, kick, slide, jump, header, ...).
+   El pie del personaje debe tocar la fila 42 y estar centrado en x = 20.
+
+3) Logo del título
+   img/logo.png             — se dibuja centrado en la pantalla de título.
+
+ids válidos: samurai, ninja, cyborg, monje, hechicero, valquiria, golem,
+             velocista, caballero, alquimista
+
+favicon.svg ya está incluido.

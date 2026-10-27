@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Dimension Strikers: fútbol arcade 2.5D en pixel art con supertiros estilo anime. Compite en el Súper Torneo Dimensional.">
+  <meta name="theme-color" content="#0b0614">
+  <title>Dimension Strikers — Súper Torneo Dimensional</title>
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bangers&amp;family=Chakra+Petch:wght@400;600;700&amp;family=Press+Start+2P&amp;display=swap">
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <header class="sr-only">
+    <h1>Dimension Strikers — Súper Torneo Dimensional</h1>
+  </header>
+
+  <main id="app" class="app">
+    <div id="stage" class="stage">
+      <!-- Lienzo principal: intro, estadio, partido, HUD y cinemáticas -->
+      <canvas id="game" class="stage__canvas" width="640" height="360" role="img" aria-label="Pantalla de juego de Dimension Strikers">
+        Tu navegador no soporta el elemento canvas de HTML5.
+      </canvas>
+
+      <!-- Botón de silencio global -->
+      <button type="button" id="btn-mute" class="mute-btn" aria-pressed="false" aria-label="Silenciar sonido (tecla M)">
+        <span class="mute-btn__icon" aria-hidden="true">♪</span>
+      </button>
+
+      <!-- 0. Arranque: desbloquea el audio del navegador -->
+      <section id="screen-boot" class="screen screen--boot is-active" aria-labelledby="boot-title">
+        <h2 id="boot-title" class="boot__title">Dimension Strikers</h2>
+        <p class="boot__subtitle">Súper Torneo Dimensional</p>
+        <button type="button" class="menu-item btn btn--big" data-action="boot">
+          <span class="btn__label">▶ Pulsa para iniciar</span>
+        </button>
+        <p class="boot__hint">Activa el sonido · Teclado o mando recomendado</p>
+        <p class="touch-warning">Este juego necesita teclado o mando para jugarse.</p>
+      </section>
+
+      <!-- 1. Menú principal -->
+      <section id="screen-menu" class="screen screen--menu" aria-labelledby="menu-title">
+        <h2 id="menu-title" class="sr-only">Menú principal</h2>
+        <nav class="menu" aria-label="Modos de juego">
+          <ul class="menu__list">
+            <li>
+              <button type="button" class="menu-item btn btn--menu" data-action="mode-story">
+                <span class="btn__label">Modo Historia</span>
+                <span class="btn__desc">5 rivales · el camino al título dimensional</span>
+              </button>
+            </li>
+            <li>
+              <button type="button" class="menu-item btn btn--menu" data-action="mode-cpu">
+                <span class="btn__label">VS CPU</span>
+                <span class="btn__desc">Jugador contra la máquina · 4 dificultades</span>
+              </button>
+            </li>
+            <li>
+              <button type="button" class="menu-item btn btn--menu" data-action="mode-pvp">
+                <span class="btn__label">VS 2 Jugadores</span>
+                <span class="btn__desc">Duelo local en el mismo teclado o mandos</span>
+              </button>
+            </li>
+            <li>
+              <button type="button" class="menu-item btn btn--menu" data-action="mode-demo">
+                <span class="btn__label">Exhibición CPU</span>
+                <span class="btn__desc">Mira un partido entre dos IA en dificultad Leyenda</span>
+              </button>
+            </li>
+            <li>
+              <button type="button" class="menu-item btn btn--menu" data-action="controls">
+                <span class="btn__label">Controles</span>
+                <span class="btn__desc">Teclas, mandos y técnicas especiales</span>
+              </button>
+            </li>
+          </ul>
+        </nav>
+        <p class="menu__footer">W/S o ↑/↓ para moverte · J o Enter para elegir</p>
+      </section>
+
+      <!-- 2. Controles -->
+      <section id="screen-controls" class="screen screen--panel" aria-labelledby="controls-title">
+        <h2 id="controls-title" class="panel-title">Controles</h2>
+        <div class="controls-grid">
+          <article class="controls-card controls-card--p1">
+            <h3 class="controls-card__title">Jugador 1</h3>
+            <table class="keys">
+              <caption class="sr-only">Controles del Jugador 1</caption>
+              <tbody>
+                <tr><th scope="row"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></th><td>Moverse / apuntar</td></tr>
+                <tr><th scope="row"><kbd>J</kbd></th><td>Pase · sin balón: cambio / presión</td></tr>
+                <tr><th scope="row"><kbd>K</kbd></th><td>Tiro (mantén = carga / Supertiro) · Cabezazo</td></tr>
+                <tr><th scope="row"><kbd>L</kbd></th><td>Centro aéreo · sin balón: barrida</td></tr>
+                <tr><th scope="row"><kbd>U</kbd></th><td>Golpe Único del personaje</td></tr>
+                <tr><th scope="row"><kbd>I</kbd></th><td>Con balón: regate · sin balón: salto</td></tr>
+                <tr><th scope="row"><kbd>O</kbd> o <kbd>U</kbd>+<kbd>I</kbd></th><td>Habilidad activa</td></tr>
+              </tbody>
+            </table>
+          </article>
+          <article class="controls-card controls-card--p2">
+            <h3 class="controls-card__title">Jugador 2</h3>
+            <table class="keys">
+              <caption class="sr-only">Controles del Jugador 2</caption>
+              <tbody>
+                <tr><th scope="row"><kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></th><td>Moverse / apuntar</td></tr>
+                <tr><th scope="row"><kbd>Num 1</kbd></th><td>Pase · cambio / presión</td></tr>
+                <tr><th scope="row"><kbd>Num 2</kbd></th><td>Tiro · Supertiro · Cabezazo</td></tr>
+                <tr><th scope="row"><kbd>Num 3</kbd></th><td>Centro aéreo · barrida</td></tr>
+                <tr><th scope="row"><kbd>Num 4</kbd></th><td>Golpe Único del personaje</td></tr>
+                <tr><th scope="row"><kbd>Num 5</kbd></th><td>Regate · salto</td></tr>
+                <tr><th scope="row"><kbd>Num 6</kbd> o <kbd>4</kbd>+<kbd>5</kbd></th><td>Habilidad activa</td></tr>
+              </tbody>
+            </table>
+            <p class="controls-card__note">Sin teclado numérico: usa la fila superior 1–6.</p>
+          </article>
+          <article class="controls-card controls-card--tips">
+            <h3 class="controls-card__title">Técnicas</h3>
+            <ul class="tips">
+              <li><strong>Supertiro:</strong> con el medidor listo, mantén Tiro. Pulsa Tiro dos veces cuando la aguja pase por las zonas verdes.</li>
+              <li><strong>Cabezazo:</strong> cuando aparezca <span class="tips__q">?</span> sobre tu jugador, pulsa Tiro justo cuando el balón llegue a la cabeza.</li>
+              <li><strong>Presión:</strong> mantén Pase sin balón cerca del rival para robarle limpio.</li>
+              <li><strong>Mando:</strong> A pase · B tiro · X centro · Y golpe · RB salto · LB/RT habilidad · Start pausa.</li>
+              <li><strong>General:</strong> Esc o P pausa · M silencio.</li>
+            </ul>
+          </article>
+        </div>
+        <button type="button" class="menu-item btn" data-action="back">
+          <span class="btn__label">Volver</span>
+        </button>
+      </section>
+
+      <!-- 3. Configuración de modo -->
+      <section id="screen-config" class="screen screen--panel" aria-labelledby="config-title">
+        <h2 id="config-title" class="panel-title">Configuración</h2>
+        <p id="config-desc" class="config__desc">Prepara el encuentro.</p>
+        <fieldset id="config-difficulty" class="config__group">
+          <legend class="config__legend">Dificultad de la CPU</legend>
+          <button type="button" class="menu-item btn btn--chip" data-action="difficulty" data-value="facil" aria-pressed="false"><span class="btn__label">Fácil</span></button>
+          <button type="button" class="menu-item btn btn--chip" data-action="difficulty" data-value="normal" aria-pressed="true"><span class="btn__label">Normal</span></button>
+          <button type="button" class="menu-item btn btn--chip" data-action="difficulty" data-value="dificil" aria-pressed="false"><span class="btn__label">Difícil</span></button>
+          <button type="button" class="menu-item btn btn--chip" data-action="difficulty" data-value="leyenda" aria-pressed="false"><span class="btn__label">Leyenda</span></button>
+        </fieldset>
+        <fieldset id="config-duration" class="config__group">
+          <legend class="config__legend">Duración del partido</legend>
+          <button type="button" class="menu-item btn btn--chip" data-action="duration" data-value="2" aria-pressed="false"><span class="btn__label">2 min</span></button>
+          <button type="button" class="menu-item btn btn--chip" data-action="duration" data-value="3" aria-pressed="true"><span class="btn__label">3 min</span></button>
+          <button type="button" class="menu-item btn btn--chip" data-action="duration" data-value="5" aria-pressed="false"><span class="btn__label">5 min</span></button>
+        </fieldset>
+        <div class="config__actions">
+          <button type="button" class="menu-item btn" data-action="back"><span class="btn__label">Volver</span></button>
+          <button type="button" class="menu-item btn btn--accent" data-action="to-select"><span class="btn__label">Elegir personajes ▶</span></button>
+        </div>
+      </section>
+
+      <!-- 4. Selección de personajes (estilo juego de pelea) -->
+      <section id="screen-select" class="screen screen--select" aria-labelledby="select-title">
+        <h2 id="select-title" class="select__title">Selección de personajes</h2>
+        <p id="select-mode" class="select__mode">VS CPU</p>
+        <div class="select__layout">
+          <aside class="team-panel team-panel--p1" aria-labelledby="team-name-0">
+            <h3 id="team-name-0" class="team-panel__name">Jugador 1</h3>
+            <ol id="team-slots-0" class="team-slots"></ol>
+            <article id="detail-0" class="char-detail">
+              <h4 class="char-detail__name">—</h4>
+              <p class="char-detail__arch">—</p>
+              <div class="char-detail__art">
+                <canvas class="char-detail__portrait" width="64" height="64" aria-hidden="true"></canvas>
+                <canvas class="char-detail__sprite" width="40" height="44" aria-hidden="true"></canvas>
+              </div>
+              <dl class="stats"></dl>
+              <ul class="moves"></ul>
+            </article>
+          </aside>
+
+          <ul id="select-grid" class="select-grid" aria-label="Roster de 10 personajes"></ul>
+
+          <aside class="team-panel team-panel--p2" aria-labelledby="team-name-1">
+            <h3 id="team-name-1" class="team-panel__name">CPU</h3>
+            <ol id="team-slots-1" class="team-slots"></ol>
+            <article id="detail-1" class="char-detail">
+              <h4 class="char-detail__name">—</h4>
+              <p class="char-detail__arch">—</p>
+              <div class="char-detail__art">
+                <canvas class="char-detail__portrait" width="64" height="64" aria-hidden="true"></canvas>
+                <canvas class="char-detail__sprite" width="40" height="44" aria-hidden="true"></canvas>
+              </div>
+              <dl class="stats"></dl>
+              <ul class="moves"></ul>
+            </article>
+          </aside>
+        </div>
+        <p id="select-status" class="select__status" aria-live="polite">Elige 4 personajes de campo. El portero es automático.</p>
+        <p class="select__help">J1: WASD mover · J elegir · L quitar &nbsp;|&nbsp; J2: Flechas · Num1 elegir · Num3 quitar &nbsp;|&nbsp; Clic: elegir · Esc: volver</p>
+      </section>
+
+      <!-- 5. Diálogo estilo novela visual (Modo Historia) -->
+      <section id="screen-dialogue" class="screen screen--dialogue" aria-labelledby="dialogue-title">
+        <h2 id="dialogue-title" class="dialogue__title">Partido 1</h2>
+        <p id="dialogue-rival" class="dialogue__rival">Rival</p>
+        <div class="dialogue__portraits">
+          <canvas id="dialogue-left" class="dialogue__portrait dialogue__portrait--left" width="64" height="64" aria-hidden="true"></canvas>
+          <canvas id="dialogue-right" class="dialogue__portrait dialogue__portrait--right" width="64" height="64" aria-hidden="true"></canvas>
+        </div>
+        <div class="dialogue__box">
+          <p id="dialogue-speaker" class="dialogue__speaker">—</p>
+          <p id="dialogue-text" class="dialogue__text" aria-live="polite"></p>
+          <p class="dialogue__next">▼ J / Enter / clic</p>
+        </div>
+        <button type="button" class="menu-item btn btn--ghost dialogue__skip" data-action="dialogue-skip"><span class="btn__label">Saltar ▶▶</span></button>
+      </section>
+
+      <!-- 6. Pausa -->
+      <section id="screen-pause" class="screen screen--pause" aria-labelledby="pause-title">
+        <h2 id="pause-title" class="panel-title">Pausa</h2>
+        <ul class="menu__list menu__list--compact">
+          <li><button type="button" class="menu-item btn" data-action="resume"><span class="btn__label">Continuar</span></button></li>
+          <li><button type="button" class="menu-item btn" data-action="restart"><span class="btn__label">Reiniciar partido</span></button></li>
+          <li><button type="button" class="menu-item btn" data-action="pause-controls"><span class="btn__label">Ver controles</span></button></li>
+          <li><button type="button" class="menu-item btn" data-action="quit"><span class="btn__label">Salir al menú</span></button></li>
+        </ul>
+      </section>
+
+      <!-- 7. Resultados -->
+      <section id="screen-results" class="screen screen--results" aria-labelledby="results-title">
+        <h2 id="results-title" class="results__title">¡Victoria!</h2>
+        <p id="results-score" class="results__score">0 — 0</p>
+        <div class="results__teams">
+          <article class="results__team results__team--p1">
+            <h3 id="results-name-0" class="results__team-name">Equipo 1</h3>
+            <ul id="results-scorers-0" class="results__scorers"></ul>
+          </article>
+          <article class="results__team results__team--p2">
+            <h3 id="results-name-1" class="results__team-name">Equipo 2</h3>
+            <ul id="results-scorers-1" class="results__scorers"></ul>
+          </article>
+        </div>
+        <p id="results-mvp" class="results__mvp">MVP</p>
+        <div class="results__actions">
+          <button type="button" class="menu-item btn btn--accent" data-action="next" hidden><span class="btn__label">Siguiente partido ▶</span></button>
+          <button type="button" class="menu-item btn btn--accent" data-action="retry" hidden><span class="btn__label">Reintentar</span></button>
+          <button type="button" class="menu-item btn btn--accent" data-action="rematch" hidden><span class="btn__label">Revancha</span></button>
+          <button type="button" class="menu-item btn" data-action="reselect" hidden><span class="btn__label">Cambiar equipos</span></button>
+          <button type="button" class="menu-item btn" data-action="quit"><span class="btn__label">Menú principal</span></button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Pistas musicales originales (el SoundManager las controla y aplica respaldo sintetizado si faltan) -->
+  <audio id="bgm-match" src="audio/bgm_match_eurobeat.mp3" preload="auto" loop></audio>
+  <audio id="bgm-select" src="audio/bgm_select_funk.mp3" preload="auto" loop></audio>
+</body>
+</html>

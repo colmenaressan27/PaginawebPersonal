@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="GALAXHELL — Shoot 'em up Bullet Hell + RPG por turnos. Creado por Santiago Colmenares.">
+  <meta name="author" content="Santiago Colmenares">
+  <title>GALAXHELL — Creado por Santiago Colmenares</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="gh-page">
+    <!-- Contenedor principal del juego -->
+    <div id="galaxhell" class="gh-container" tabindex="0" aria-label="Juego GALAXHELL">
+      <canvas id="gameCanvas" width="480" height="640">Tu navegador no soporta HTML5 Canvas.</canvas>
+      <div class="gh-scanlines" aria-hidden="true"></div>
+
+      <!-- ===== HUD: barras de vida ===== -->
+      <div id="hud" class="gh-hud hidden">
+        <div id="enemyBar" class="gh-enemy-bar hidden">
+          <span id="enemyName" class="gh-bar-name">ENEMIGO</span>
+          <div class="gh-bar">
+            <div id="enemyHpGhost" class="gh-bar-ghost"></div>
+            <div id="enemyHpFill" class="gh-bar-fill enemy"></div>
+          </div>
+          <span id="enemyHpText" class="gh-bar-text">--/--</span>
+        </div>
+
+        <div id="playerBar" class="gh-player-bar">
+          <div class="gh-player-row">
+            <span class="gh-bar-name">SANTI</span>
+            <span id="playerLv" class="gh-lv">LV 1</span>
+            <span class="gh-hp-label">HP</span>
+            <div class="gh-bar player">
+              <div id="playerHpFill" class="gh-bar-fill player"></div>
+            </div>
+            <span id="playerHpText" class="gh-bar-text">100/100</span>
+          </div>
+          <div id="statusIcons" class="gh-status"></div>
+        </div>
+      </div>
+
+      <!-- ===== Texto de batalla (estilo Undertale) ===== -->
+      <p id="battleLog" class="gh-battle-log hidden" aria-live="polite"></p>
+
+      <!-- ===== Menú flotante alrededor de la nave ===== -->
+      <div id="floatMenu" class="gh-float-menu hidden">
+        <button id="btnAttack" class="gh-float-btn attack" type="button">[ ATACAR ]</button>
+        <button id="btnItem" class="gh-float-btn item" type="button">[ OBJETO ]</button>
+      </div>
+
+      <!-- ===== Inventario ===== -->
+      <div id="itemMenu" class="gh-item-menu gh-box hidden">
+        <div class="gh-item-title">* OBJETOS</div>
+        <ul id="itemList" class="gh-item-list"></ul>
+        <p id="itemDesc" class="gh-item-desc"></p>
+        <p class="gh-hint">Z / ESPACIO: usar &nbsp;·&nbsp; X / ESC: volver</p>
+      </div>
+
+      <!-- ===== Menú principal ===== -->
+      <div id="mainMenu" class="gh-overlay gh-menu">
+        <div class="gh-menu-box gh-box">
+          <h1 class="gh-title" data-text="GALAXHELL">GALAXHELL</h1>
+          <p class="gh-credit">Creado por Santiago Colmenares</p>
+
+          <div id="menuButtons" class="gh-menu-buttons">
+            <button id="btnStart" class="gh-btn" type="button">[ INICIAR JUEGO ]</button>
+            <button id="btnOptions" class="gh-btn" type="button">[ OPCIONES ]</button>
+          </div>
+
+          <div id="optionsPanel" class="gh-options hidden">
+            <button id="btnMute" class="gh-btn small" type="button">[ SONIDO: ACTIVADO ]</button>
+            <label for="volumeSlider" class="gh-vol-label">VOLUMEN: <span id="volumeValue">70%</span></label>
+            <input type="range" id="volumeSlider" class="gh-slider" min="0" max="100" step="1" value="70" aria-label="Volumen">
+            <button id="btnBack" class="gh-btn small" type="button">[ VOLVER ]</button>
+          </div>
+
+          <p id="audioHint" class="gh-hint blink">♪ Haz clic o pulsa una tecla para activar el sonido</p>
+          <p class="gh-controls">FLECHAS/WASD mover · Z/ESPACIO confirmar · X/ESC volver · SHIFT precisión · M silenciar</p>
+        </div>
+      </div>
+
+      <!-- ===== Intercomunicador del General (estilo Star Fox) ===== -->
+      <div id="dialogBox" class="gh-dialog hidden" role="dialog" aria-label="Transmisión del General">
+        <div class="gh-portrait-frame">
+          <canvas id="portraitCanvas" width="48" height="48"></canvas>
+          <span class="gh-comm-label">COMM</span>
+        </div>
+        <div class="gh-dialog-body">
+          <div id="dialogName" class="gh-dialog-name">GRAL. ORIÓN</div>
+          <p id="dialogText" class="gh-dialog-text"></p>
+        </div>
+        <span id="dialogNext" class="gh-dialog-next waiting">▼</span>
+        <span id="dialogSkip" class="gh-dialog-skip hidden">ESC: saltar</span>
+      </div>
+
+      <!-- ===== Alerta del Jefe ===== -->
+      <div id="alertOverlay" class="gh-alert hidden" aria-live="assertive">
+        <div class="gh-alert-stripe"></div>
+        <div class="gh-alert-text">¡ALERTA!<br>BOSS APROXIMÁNDOSE</div>
+        <div class="gh-alert-stripe"></div>
+      </div>
+
+      <!-- ===== Game Over ===== -->
+      <div id="gameOverScreen" class="gh-overlay gh-gameover hidden">
+        <div class="gh-box gh-end-box">
+          <h2 class="gh-gameover-title">GAME OVER</h2>
+          <p class="gh-end-text">¡No pierdas la determinación, piloto!</p>
+          <div class="gh-menu-buttons">
+            <button id="btnRetry" class="gh-btn" type="button">[ REINTENTAR ]</button>
+            <button id="btnGoMenu" class="gh-btn" type="button">[ MENÚ PRINCIPAL ]</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Victoria ===== -->
+      <div id="victoryScreen" class="gh-overlay gh-victory hidden">
+        <div class="gh-box gh-end-box">
+          <h2 class="gh-victory-title">¡VICTORIA!</h2>
+          <p class="gh-end-text">La Estación NÉMESIS ha sido destruida.</p>
+          <ul id="victoryStats" class="gh-stats"></ul>
+          <div class="gh-credits-roll">
+            <p class="gh-credits-game">GALAXHELL</p>
+            <p class="gh-credit">Creado por Santiago Colmenares</p>
+          </div>
+          <button id="btnVictoryMenu" class="gh-btn" type="button">[ VOLVER AL MENÚ ]</button>
+        </div>
+      </div>
+
+      <button id="quickMute" class="gh-quick-mute" type="button" title="Silenciar / activar sonido (M)" aria-pressed="false">♪</button>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

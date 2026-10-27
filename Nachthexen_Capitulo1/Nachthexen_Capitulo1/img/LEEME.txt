@@ -1,0 +1,17 @@
+NACHTHEXEN · Capítulo 1 (Beta) — Imágenes opcionales
+=====================================================
+
+El juego funciona sin ninguna imagen: todo se dibuja en Canvas (fallback
+procedural). Si colocas en esta carpeta archivos PNG con estos nombres
+exactos, el juego los usará automáticamente:
+
+  img/crosshair.png        Retícula de apuntado (cercana y lejana). Fondo transparente,
+                           cuadrada (recomendado 32×32 o 64×64 px, estilo pixel art).
+  img/yevdokiya.png        Retrato de Yevdokía Bershánskaya para la radio.
+  img/marina_raskova.png   Retrato de Marina Raskova para la radio.
+  img/radio_aleman.png     Retrato de la intercepción de radio alemana.
+
+Los retratos se recortan al centro en formato cuadrado (recomendado 64×64 px).
+Con imágenes pequeñas se verán pixeladas, como en una consola de 64 bits.
+
+favicon.svg es el icono de la pestaña del navegador.
