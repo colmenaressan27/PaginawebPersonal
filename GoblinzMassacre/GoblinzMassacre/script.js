@@ -527,7 +527,6 @@
     p.poly([cx + 6, hy0 - 1, cx + 14, hy0 - 5, cx + 7, hy0 + 1], skinD);
     p.ell(cx, hy0, 7, 6, skin); p.ell(cx, hy0 + 3, 6, 4, skin);
     if (S.hat === 'hood') { p.ell(cx, hy0 - 4, 8, 4, S.cloth); p.rect(cx - 8, hy0 - 4, 2, 9, S.cloth); p.rect(cx + 6, hy0 - 4, 2, 9, S.cloth); }
-    // cara
     const dk = '#2a0a0a';
     if (pain) {
       p.line(cx - 5, hy0 - 1, cx - 2, hy0, dk); p.line(cx + 2, hy0, cx + 5, hy0 - 1, dk);
@@ -676,7 +675,7 @@
   }
 
   // =======================================================================
-  // 5. ARMAS EN PRIMERA PERSONA, CARA DEL HUD E ÍCONOS
+  // 5. ARMAS EN SPRITES (respaldo sin WebGL) E ÍCONOS
   // =======================================================================
   const SKIN = '#d9a066', SKIND = '#a8703f', SLEEVE = '#5a1418', SLEEVED = '#3a0c10';
   function hand(p, x, y, rx = 11, ry = 8) {
@@ -785,40 +784,6 @@
     }, { cut: true }).cv);
   }
 
-  // Cara del héroe en el HUD (cambia con la salud, como en 1993)
-  function drawFace(cv, tier, look, expr) {
-    const ctx = cv.getContext('2d'); const p = painter(ctx);
-    ctx.clearRect(0, 0, 24, 26);
-    p.rect(0, 0, 24, 26, '#1a0f0d');
-    const dead = expr === 'dead';
-    p.ell(12, 14, 8, 10, dead ? '#a88a66' : SKIN);
-    p.ell(16, 16, 3, 7, SKIND);
-    p.rect(4, 2, 16, 6, '#2a1a10'); p.rect(3, 5, 2, 8, '#2a1a10'); p.rect(19, 5, 2, 8, '#2a1a10');
-    p.rect(4, 7, 16, 2, '#b3121b'); p.rect(19, 8, 3, 2, '#b3121b'); p.rect(21, 10, 2, 3, '#b3121b');
-    const lx = look;
-    if (dead) {
-      for (const ex of [8, 15]) { p.line(ex - 1, 11, ex + 2, 14, '#2a0a0a'); p.line(ex + 2, 11, ex - 1, 14, '#2a0a0a'); }
-    } else {
-      p.rect(7, 11, 4, 3, '#f4f0e8'); p.rect(14, 11, 4, 3, '#f4f0e8');
-      p.rect(8 + lx, 11, 2, 3, '#3a2a1a'); p.rect(15 + lx, 11, 2, 3, '#3a2a1a');
-      const angry = expr === 'grin' || expr === 'ouch';
-      p.line(6, angry ? 9 : 10, 11, 10, '#2a1a10'); p.line(13, 10, 18, angry ? 9 : 10, '#2a1a10');
-      if (tier >= 3) { p.ell(9, 12, 3, 2.5, 'rgba(110,40,80,0.8)'); p.rect(8 + lx, 11, 2, 2, '#3a2a1a'); }
-    }
-    p.rect(11, 14, 2, 3, SKIND);
-    for (let i = 0; i < 18; i++) p.px(6 + (i * 7) % 12, 18 + (i * 5) % 5, '#8a5a30');
-    if (dead) { p.rect(9, 20, 6, 2, '#3a0a0a'); p.rect(11, 21, 2, 2, '#d04050'); }
-    else if (expr === 'grin') { p.rect(8, 19, 8, 3, '#3a0a0a'); p.rect(9, 19, 6, 1, '#fff'); p.rect(9, 21, 6, 1, '#fff'); }
-    else if (expr === 'ouch') { p.ell(12, 20, 2.5, 2, '#3a0a0a'); }
-    else p.rect(9, 20, 6, 1, '#5a2a1a');
-    const blood = 'rgb(170,10,16)';
-    if (tier >= 1) { p.rect(16, 4, 2, 4, blood); }
-    if (tier >= 2) { p.rect(5, 12, 1, 6, blood); p.px(17, 16, blood); p.rect(17, 9, 1, 4, blood); }
-    if (tier >= 3) { p.rect(13, 17, 1, 5, blood); p.rect(7, 20, 2, 3, blood); }
-    if (tier >= 4 || dead) { p.rect(10, 3, 3, 9, blood); p.rect(18, 14, 2, 8, blood); p.rect(4, 18, 3, 4, blood); }
-  }
-
-  // Íconos para la tienda (data URL)
   const ICONS = {};
   function buildIcons() {
     const fromTex = (t) => t.cv.toDataURL();
@@ -1168,7 +1133,6 @@
       dmgMul: 1, rateMul: 1, speedMul: 1, dmgUp: 0, rateUp: 0, hpUp: 0, spdUp: 0,
       dashT: 0, dashCd: 0, dashX: 0, dashY: 0, emptyT: 0,
       alive: true, deathT: 0, combo: 0, comboT: 0,
-      faceExpr: 'n', faceT: 0, faceLook: 0, faceLookT: 0
     });
   }
 
@@ -1216,6 +1180,7 @@
     GS.shake += settings.shake ? (w.shake || 0) : 0;
     if (w.melee) { P.atkAnim = 0.3; doMelee(w); return; }
     P.flashT = 0.07;
+    Weapons3D.fire(P.cur);
     flashLight(P.x, P.y, 5.5, 0.8, 0.09);
     if (w.projectile) { fireRocket(w); return; }
     let any = false;
@@ -1314,13 +1279,12 @@
     GS.waveDamage += dmg;
     UI.hurt(Math.min(1, 0.35 + dmg / 30), angDiff(P.a, Math.atan2(fy - P.y, fx - P.x)));
     AudioSys.play('player_hurt');
-    P.faceExpr = 'ouch'; P.faceT = 0.6;
     if (settings.shake) GS.shake += 0.25;
     if (P.hp <= 0) { P.hp = 0; playerDie(); }
   }
 
   function playerDie() {
-    P.alive = false; P.deathT = 0; P.faceExpr = 'dead';
+    P.alive = false; P.deathT = 0;
     AudioSys.play('player_die');
     UI.announce('¡MUERTO!', pick(GO_QUOTES), 2.4, '');
     AudioSys.duck = 0.25;
@@ -1422,7 +1386,6 @@
     if (info.head) { UI.feed('¡HEADSHOT! +50%', 'gold'); AudioSys.play('headshot', 0.7); }
     if (T.boss) { UI.announce('¡REY DERROTADO!', `+${pts} puntos · ¡qué peste!`, 3, 'gold'); AudioSys.play('wave_clear'); }
     else if (Math.random() < 0.3) UI.feed(pick(KILL_LINES), 'kill');
-    P.faceExpr = 'grin'; P.faceT = 0.9;
     // botín
     const gold = Math.round(T.gold * GS.diff.gold * (1 + GS.wave * 0.05));
     const n = Math.min(T.boss ? 20 : 5, Math.max(1, Math.ceil(gold / 10)));
@@ -1843,7 +1806,7 @@
 
   const UI = {
     cur: 'splash', optReturn: 'menu', cache: {}, annT: 0, hitT: 0, hurtA: 0, dirA: 0, pickA: 0, comboT: 0,
-    goldAcc: 0, goldT: 0, faceKey: '', faceTimer: 0, mapTick: 0, fpsN: 0, fpsT: 0,
+    goldAcc: 0, goldT: 0, beltKey: '', mapTick: 0, fpsN: 0, fpsT: 0,
 
     show(id) {
       for (const s of SCREENS) $(s).classList.toggle('hidden', s !== id);
@@ -1882,7 +1845,7 @@
     },
     goldPop(v) { this.goldAcc += v; this.goldT = 0.9; },
     hitMarker(head) { const c = $('crosshair'); c.classList.remove('hit', 'head'); c.classList.add(head ? 'head' : 'hit'); this.hitT = 0.12; },
-    hurt(intensity, ang) { this.hurtA = Math.max(this.hurtA, intensity); $('dmgDir').style.transform = `rotate(${ang}rad)`; this.dirA = 1; },
+    hurt(intensity, ang) { this.hurtA = Math.max(this.hurtA, intensity); Flask.hit(); $('dmgDir').style.transform = `rotate(${ang}rad)`; this.dirA = 1; },
     pickupFlash() { this.pickA = 0.55; },
 
     hud() {
@@ -1890,11 +1853,13 @@
       const wid = P.next || P.cur, w = WEAPONS[wid];
       set('hudAmmo', w.ammo ? String(P.ammo[w.ammo]) : '∞');
       set('hudAmmoLbl', w.ammo ? AMMO_NAME[w.ammo] : 'CUERPO A CUERPO');
-      set('hudHp', `${Math.ceil(P.hp)}%`);
+      set('hudHp', String(Math.ceil(P.hp)));
       const low = P.hp <= P.maxHp * 0.25;
       if (this.cache.low !== low) { this.cache.low = low; $('hudHp').classList.toggle('low', low); }
-      set('hudArmor', `${Math.ceil(P.armor)}%`);
+      set('hudArmor', String(Math.ceil(P.armor)));
       set('hudGold', String(P.gold));
+      const beltKey = `${wid}|${w.ammo ? P.ammo[w.ammo] : 0}|${w.ammo ? P.maxAmmo[w.ammo] : 0}`;
+      if (beltKey !== this.beltKey) { this.beltKey = beltKey; drawBelt(wid); }
       set('hudWeaponName', w.name.toUpperCase());
       set('amB', String(P.ammo.bullets)); set('amS', String(P.ammo.shells)); set('amR', String(P.ammo.rockets));
       const armKey = WEAPON_ORDER.map((k) => (P.owned[k] ? 1 : 0) + (k === wid ? 2 : 0)).join('');
@@ -1905,12 +1870,6 @@
       set('topWave', GS.wave ? `OLEADA ${GS.wave}` : 'PREPARACIÓN');
       set('topLeft', `GOBLINS: ${GS.alive + GS.toSpawn.length}`);
       set('topScore', `${P.score.toLocaleString('es')} PTS`);
-      // cara
-      const pct = P.hp / P.maxHp;
-      const tier = pct > 0.8 ? 0 : pct > 0.6 ? 1 : pct > 0.4 ? 2 : pct > 0.2 ? 3 : 4;
-      const expr = !P.alive ? 'dead' : P.faceT > 0 ? P.faceExpr : 'n';
-      const key = `${tier}|${P.faceLook}|${expr}`;
-      if (key !== this.faceKey) { this.faceKey = key; drawFace($('face'), tier, P.faceLook, expr); }
     },
 
     update(dt) {
@@ -1923,9 +1882,8 @@
       if (this.goldT > 0) { this.goldT -= dt; if (this.goldT <= 0 && this.goldAcc) { this.feed(`+${this.goldAcc} oro`, 'gold'); this.goldAcc = 0; } }
       const inGame = ['playing', 'paused', 'shop', 'gameover'].includes(GS.state);
       if (inGame) {
-        P.faceLookT -= dt; if (P.faceLookT <= 0) { P.faceLookT = rand(0.8, 2.2); P.faceLook = pick([-1, 0, 0, 1]); }
-        if (P.faceT > 0) P.faceT -= dt;
         this.hud();
+        Flask.draw(dt);
         $('lowHp').style.opacity = P.alive && P.hp <= P.maxHp * 0.25 ? '1' : '0';
         $('lockHint').classList.toggle('hidden', !(GS.state === 'playing' && !locked && !GS.noLock && P.alive));
         if (settings.minimap && ++this.mapTick % 3 === 0) drawMinimap();
@@ -1936,6 +1894,151 @@
       if (this.fpsT >= 0.5) { $('fps').textContent = settings.showFps ? `${Math.round(this.fpsN / this.fpsT)} FPS · ${R.W}x${R.H}` : ''; this.fpsN = 0; this.fpsT = 0; }
     }
   };
+
+  // ---- Frasco de sangre (vida) y anillo de runas (armadura) ----
+  const RUNE_GLYPHS = ['101|101|111|010|010', '110|101|110|101|110', '010|111|010|010|010', '101|010|101|010|101', '111|100|110|100|100', '001|011|101|011|001'];
+
+  const Flask = {
+    W: 84, H: 104, CX: 42, CY: 62, R: 27, ctx: null, glass: null, top: [], bot: [], runes: [],
+    t: 0, level: 1, armor: 0, slosh: 0, bubbles: [],
+
+    init() {
+      this.ctx = $('flask').getContext('2d');
+      const { W, H, CX, CY, R } = this;
+      // Silueta: cuello recto y panza redonda
+      for (let x = 0; x < W; x++) {
+        const dx = Math.abs(x + 0.5 - CX);
+        if (dx > R) { this.top[x] = this.bot[x] = 0; continue; }
+        const h = Math.sqrt(R * R - dx * dx);
+        this.top[x] = dx < 8 ? 15 : Math.round(CY - h);
+        this.bot[x] = Math.round(CY + h);
+      }
+      for (let i = 0; i < 12; i++) {
+        const a = (300 + i * (300 / 11)) * Math.PI / 180;
+        this.runes.push({
+          x: Math.round(CX + Math.cos(a) * 35) - 1, y: Math.round(CY + Math.sin(a) * 35) - 2,
+          glyph: RUNE_GLYPHS[i % RUNE_GLYPHS.length].split('|')
+        });
+      }
+      // Capa fija de vidrio, corcho y cuerda
+      this.glass = makeCanvas(W, H);
+      const c = this.glass.getContext('2d');
+      const px = (x, y, w, h, col) => { c.fillStyle = col; c.fillRect(x, y, w, h); };
+      for (let x = 0; x < W; x++) {
+        if (this.top[x] === this.bot[x]) continue;
+        px(x, this.top[x] - 1, 1, 1, 'rgba(232,220,192,.8)');
+        px(x, this.bot[x], 1, 1, 'rgba(232,220,192,.55)');
+        if (this.top[x] !== this.top[x - 1]) {
+          const from = Math.min(this.top[x], this.top[x - 1] || this.top[x]), to = Math.max(this.top[x], this.top[x - 1] || this.top[x]);
+          px(x, from, 1, to - from, 'rgba(232,220,192,.8)');
+        }
+        if (this.top[x] !== this.top[x + 1] || this.bot[x] !== this.bot[x + 1]) px(x, this.top[x], 1, 1, 'rgba(232,220,192,.5)');
+      }
+      for (let y = CY - 12; y < CY + 12; y++) {
+        const hw = Math.round(Math.sqrt(R * R - (y - CY) * (y - CY)));
+        px(CX - hw - 1, y, 1, 1, 'rgba(232,220,192,.8)');
+        px(CX + hw, y, 1, 1, 'rgba(232,220,192,.8)');
+      }
+      for (let a = 2.7; a < 3.75; a += 0.05) px(Math.round(CX + Math.cos(a) * (R - 5)), Math.round(CY + Math.sin(a) * (R - 5)), 2, 2, 'rgba(255,255,255,.42)');
+      px(CX + 12, CY + 13, 3, 2, 'rgba(255,255,255,.3)');
+      px(CX - 6, 18, 2, 16, 'rgba(255,255,255,.28)');
+      px(32, 11, 20, 3, '#e8dcc0');
+      px(32, 13, 20, 1, '#a89878');
+      px(35, 3, 14, 8, '#8a5a2e');
+      px(35, 3, 14, 2, '#b07a44');
+      px(35, 9, 14, 2, '#5c3a1c');
+      px(33, 18, 18, 2, '#b7a98a');
+      px(33, 19, 18, 1, '#7a6a50');
+      px(47, 19, 2, 8, '#b7a98a');
+    },
+
+    hit() {
+      this.slosh = 3.2;
+      const f = $('flask');
+      f.classList.remove('hit');
+      void f.offsetWidth;
+      f.classList.add('hit');
+    },
+
+    draw(dt) {
+      const c = this.ctx, { W, H, top, bot } = this;
+      this.t += dt;
+      this.level += (clamp(P.hp / P.maxHp, 0, 1) - this.level) * Math.min(1, dt * 6);
+      this.armor += (clamp(P.armor / 100, 0, 1) - this.armor) * Math.min(1, dt * 6);
+      this.slosh += (P.bobAmt * 1.1 - this.slosh) * Math.min(1, dt * 2.5);
+      const amp = 0.5 + this.slosh * 1.3;
+      const surface = 90 - this.level * 72;
+      const low = this.level <= 0.25;
+      const pulse = low ? 0.5 + Math.sin(this.t * 8) * 0.5 : 0;
+
+      c.clearRect(0, 0, W, H);
+      const lit = Math.ceil(this.armor * 12);
+      this.runes.forEach((r, i) => {
+        c.fillStyle = i < lit ? '#6fb0ff' : '#2d2d3c';
+        r.glyph.forEach((row, y) => { for (let x = 0; x < 3; x++) if (row[x] === '1') c.fillRect(r.x + x, r.y + y, 1, 1); });
+      });
+
+      for (let x = 0; x < W; x++) {
+        if (top[x] === bot[x]) continue;
+        c.fillStyle = 'rgba(20,8,8,.72)';
+        c.fillRect(x, top[x], 1, bot[x] - top[x]);
+        const s = surface + Math.sin(x * 0.33 + this.t * 3.1) * amp + Math.sin(x * 0.12 - this.t * 1.9) * amp * 0.7;
+        const ys = Math.max(Math.round(s), top[x]);
+        if (ys >= bot[x]) continue;
+        c.fillStyle = pulse > 0.5 ? '#d8121f' : '#a80f1a';
+        c.fillRect(x, ys, 1, bot[x] - ys);
+        c.fillStyle = '#ff5a48';
+        c.fillRect(x, ys, 1, 2);
+        const deep = Math.max(ys + 2, this.CY + 12);
+        if (deep < bot[x]) { c.fillStyle = '#760a12'; c.fillRect(x, deep, 1, bot[x] - deep); }
+      }
+
+      if (this.level > 0.04 && Math.random() < dt * 3) this.bubbles.push({ x: 26 + Math.random() * 32, y: 84, v: 8 + Math.random() * 10 });
+      this.bubbles = this.bubbles.filter((b) => {
+        b.y -= b.v * dt;
+        b.x += Math.sin(this.t * 6 + b.v) * dt * 4;
+        c.fillStyle = '#ff8a70';
+        c.fillRect(b.x | 0, b.y | 0, 1 + (b.v > 13 ? 1 : 0), 1 + (b.v > 13 ? 1 : 0));
+        return b.y > surface + 1;
+      });
+
+      c.drawImage(this.glass, 0, 0);
+    }
+  };
+
+  // ---- Cinturón de munición: una presilla por cada tanto de balas ----
+  const BELT_SLOTS = { bullets: 22, shells: 12, rockets: 6 };
+
+  function drawBelt(wid) {
+    const c = $('belt').getContext('2d'), W = 220, w = WEAPONS[wid];
+    const px = (x, y, wd, h, col) => { c.fillStyle = col; c.fillRect(Math.round(x), y, wd, h); };
+    c.clearRect(0, 0, W, 30);
+    px(0, 13, W, 13, '#5f3d22');
+    px(0, 13, W, 1, '#8a5f36');
+    px(0, 25, W, 1, '#2e1c0e');
+    for (let x = 2; x < W; x += 7) { px(x, 15, 3, 1, '#c8b890'); px(x, 23, 3, 1, '#c8b890'); }
+    px(W - 15, 10, 12, 19, '#c8963a');
+    px(W - 15, 10, 12, 1, '#f0d48a');
+    px(W - 12, 14, 6, 11, '#5f3d22');
+    px(W - 21, 17, 12, 3, '#d8d8e4');
+    if (!w.ammo) return;
+    const slots = BELT_SLOTS[w.ammo], full = Math.ceil(P.ammo[w.ammo] / P.maxAmmo[w.ammo] * slots), step = (W - 28) / slots;
+    const size = w.ammo === 'bullets' ? 5 : w.ammo === 'shells' ? 9 : 16;
+    for (let i = 0; i < slots; i++) {
+      const x = 3 + i * step + (step - size) / 2;
+      if (i >= full) { px(x, 14, size, 11, '#2e1c0e'); continue; }
+      if (w.ammo === 'bullets') {
+        px(x, 5, 5, 19, '#c8963a'); px(x, 5, 1, 19, '#f0d48a'); px(x + 1, 1, 3, 4, '#b2653a'); px(x + 2, 0, 1, 1, '#d8905a');
+      } else if (w.ammo === 'shells') {
+        px(x, 3, 9, 16, '#b32a22'); px(x, 3, 2, 16, '#e0584a'); px(x, 19, 9, 6, '#c8963a'); px(x, 19, 2, 6, '#f0d48a');
+      } else {
+        px(x + 3, 7, 10, 20, '#4f6638'); px(x + 3, 7, 2, 20, '#7a9458'); px(x + 5, 2, 6, 5, '#a8281e'); px(x + 7, 0, 2, 2, '#c8c8d0');
+        px(x, 22, 3, 6, '#3a4a28'); px(x + 13, 22, 3, 6, '#3a4a28');
+      }
+      px(x - 1, 15, size + 2, 7, '#6a4426');
+      px(x - 1, 15, size + 2, 1, '#8a5f36');
+    }
+  }
 
   // ---- Minimapa ----
   let mapBase = null;
@@ -2063,7 +2166,7 @@
     GS.stats = { shots: 0, hits: 0, gold: 0, time: 0 };
     dynLights.length = 0; flowCell = -1;
     GS.state = 'playing'; GS.waveState = 'countdown'; GS.waveTimer = 3.01;
-    UI.cache = {}; UI.faceKey = '';
+    UI.cache = {}; UI.beltKey = '';
     $('feed').innerHTML = '';
     UI.show(null);
     AudioSys.setMusic('level', true); AudioSys.duck = 1;
@@ -2168,7 +2271,7 @@
       if (!locked && GS.state === 'playing') pauseGame();
     });
     if (!('requestPointerLock' in R.cv)) GS.noLock = true;
-    window.addEventListener('resize', () => resizeRenderer());
+    window.addEventListener('resize', () => { resizeRenderer(); Weapons3D.resize(); });
 
     // botones
     $('splash').addEventListener('click', () => { if (GS.state === 'splash') enterMenu(); });
@@ -2288,6 +2391,15 @@
   }
 
   function drawWeapon() {
+    if (Weapons3D.ok) {
+      const lower = P.switchT > 0 ? (P.switchT > 0.15 ? (0.3 - P.switchT) / 0.15 : P.switchT / 0.15) : 0;
+      Weapons3D.draw({
+        id: P.cur, time: GS.time, flash: P.flashT, atk: P.atkAnim / 0.3, bobT: P.bobT, bobAmt: P.bobAmt, lower,
+        firing: P.fireT > 0 && mouseDown, drop: P.alive ? 0 : Math.min(1, P.deathT), yaw: P.a, pitch: P.look,
+        light: LIGHT[clamp(P.y | 0, 0, MH - 1) * MW + clamp(P.x | 0, 0, MW - 1)] / 256
+      });
+      return;
+    }
     if (!P.alive && P.deathT > 0.8) return;
     const ctx = R.ctx, ws = R.H / 175;
     const key = P.cur, A = WEAPON_ART[key];
@@ -2368,6 +2480,10 @@
     }
     resetPlayer();
     resizeRenderer();
+    if (Weapons3D.init($('viewmodel'), $('view'))) Object.assign(ICONS, Weapons3D.icons());
+    else $('viewmodel').classList.add('hidden');
+    WEAPON_ORDER.forEach((k, i) => { if (ICONS[k]) $(`arm${i + 1}`).querySelector('img').src = ICONS[k]; });
+    Flask.init();
     buildMinimapBase();
     bindInput(); bindOptions(); syncOptionsUI();
     $('scanlines').classList.toggle('hidden', !settings.crt);

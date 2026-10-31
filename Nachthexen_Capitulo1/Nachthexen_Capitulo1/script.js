@@ -4855,6 +4855,9 @@
           case 'options':
             this.setState('options');
             break;
+          case 'home':
+            window.location.href = '../../index.html';
+            break;
           case 'intro':
             Intro.start();
             break;

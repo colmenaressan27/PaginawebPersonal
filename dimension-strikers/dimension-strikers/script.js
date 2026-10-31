@@ -7832,6 +7832,9 @@ class Game {
         this.state = 'intro';
         this.ui.show(null);
         break;
+      case 'home':
+        window.location.href = '../../index.html';
+        break;
       case 'mode-story':
       case 'mode-cpu':
       case 'mode-pvp':

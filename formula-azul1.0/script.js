@@ -1621,6 +1621,7 @@ class Arcade {
     this.audio.sfx('ui-select');
     if (mode === 'arcade') this.openLobby();
     else if (mode === 'gun') this.becomeGun();
+    else if (mode === 'home') window.location.href = '../index.html';
   }
 
   resetAttract() {

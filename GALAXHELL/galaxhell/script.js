@@ -1543,7 +1543,7 @@ const UI = {
 
   init() {
     const ids = [
-      'mainMenu', 'menuButtons', 'optionsPanel', 'btnStart', 'btnOptions', 'btnMute', 'volumeSlider', 'volumeValue',
+      'mainMenu', 'menuButtons', 'optionsPanel', 'btnStart', 'btnOptions', 'btnHome', 'btnMute', 'volumeSlider', 'volumeValue',
       'btnBack', 'audioHint', 'hud', 'enemyBar', 'enemyName', 'enemyHpFill', 'enemyHpGhost', 'enemyHpText',
       'playerLv', 'playerHpFill', 'playerHpText', 'statusIcons', 'battleLog', 'floatMenu', 'btnAttack', 'btnItem',
       'itemMenu', 'itemList', 'itemDesc', 'alertOverlay', 'gameOverScreen', 'btnRetry', 'btnGoMenu',
@@ -1560,6 +1560,7 @@ const UI = {
     });
     bind(E.btnStart, () => { AudioManager.sfx('confirm'); startNewGame(); });
     bind(E.btnOptions, () => { AudioManager.sfx('confirm'); this.showOptions(true); });
+    bind(E.btnHome, () => { AudioManager.sfx('cancel'); window.location.href = '../../index.html'; });
     bind(E.btnBack, () => { AudioManager.sfx('cancel'); this.showOptions(false); });
     bind(E.btnMute, () => { AudioManager.toggleMute(); AudioManager.sfx('select'); });
     bind(E.quickMute, () => { AudioManager.toggleMute(); AudioManager.sfx('select'); });
@@ -1580,7 +1581,7 @@ const UI = {
       AudioManager.sfx('confirm');
     });
     // Resaltar con el ratón
-    [E.btnStart, E.btnOptions, E.btnMute, E.volumeSlider, E.btnBack, E.btnRetry, E.btnGoMenu, E.btnVictoryMenu].forEach((b) => {
+    [E.btnStart, E.btnOptions, E.btnHome, E.btnMute, E.volumeSlider, E.btnBack, E.btnRetry, E.btnGoMenu, E.btnVictoryMenu].forEach((b) => {
       b.addEventListener('pointerenter', () => {
         const i = this.nav.indexOf(b);
         if (i >= 0) this.setNavIndex(i);
@@ -1644,7 +1645,7 @@ const UI = {
     this.show(this.el.optionsPanel, v);
     this.show(this.el.menuButtons, !v);
     if (v) this.setNav([this.el.btnMute, this.el.volumeSlider, this.el.btnBack], 0);
-    else this.setNav([this.el.btnStart, this.el.btnOptions], 0);
+    else this.setNav([this.el.btnStart, this.el.btnOptions, this.el.btnHome], 0);
     this.syncAudioControls();
   },
   showAlert(v) { this.show(this.el.alertOverlay, v); },

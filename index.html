@@ -10,10 +10,11 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=Sora:wght@600;700&amp;zdisplay=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=Press+Start+2P&amp;family=Sora:wght@600;700&amp;display=swap">
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
   <link rel="stylesheet" href="css/styles.css">
+  <script src="js/site.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#contenido">Saltar al contenido</a>
@@ -43,73 +44,60 @@
   </header>
 
   <main id="contenido">
-    <section class="hero container">
-      <header class="hero__text">
-        <p class="hero__role">Ingeniero multimedia en formación, Cúcuta.</p>
-        <h1>Santiago Colmenares</h1>
-        <p class="lede">Edito, animo y diseño piezas que tienen que funcionar fuera del computador: un video narrativo, un empaque que se sostiene en el estante o una marca que busque destacarse.</p>
-        <p class="hero__actions">
+    <section class="opening" id="opening" aria-labelledby="hero-title">
+      <header class="opening__pin">
+        <canvas class="opening__canvas" id="hero-canvas" aria-hidden="true"></canvas>
+        <hgroup class="opening__title">
+          <p class="hero__role">Ingeniero multimedia en formación, Cúcuta.</p>
+          <h1 id="hero-title" data-split>Santiago Colmenares</h1>
+        </hgroup>
+        <p class="hero__actions opening__actions">
           <a class="btn btn-violet" href="#trabajo">Ver proyectos</a>
           <a class="btn btn-ghost" href="contacto.html">Escríbeme</a>
         </p>
-      </header>
-
-      <figure class="monitor">
-        <span class="monitor__bars" aria-hidden="true"></span>
-        <span class="monitor__screen">
-          <svg class="monitor__wave" viewBox="0 0 600 160" aria-hidden="true" focusable="false" preserveAspectRatio="none">
-            <line class="wave-grid" x1="0" y1="80" x2="600" y2="80"></line>
-            <polyline class="wave-line" points="0,80 10,79 20,76 30,73 40,70 50,69 60,70 70,72 80,74 90,75 100,77 110,80 120,83 130,87 140,89 150,89 160,84 170,74 180,61 190,47 200,37 210,33 220,37 230,48 240,63 250,79 260,92 270,102 280,108 290,111 300,114 310,116 320,117 330,114 340,107 350,96 360,82 370,69 380,60 390,58 400,64 410,75 420,89 430,101 440,108 450,111 460,109 470,104 480,98 490,93 500,88 510,84 520,80 530,75 540,72 550,70 560,70 570,72 580,75 590,78 600,80"></polyline>
-            <line class="playhead" x1="0" y1="0" x2="0" y2="160"></line>
-          </svg>
-        </span>
-        <figcaption class="monitor__readout">
-          <span>00:00:42:18</span>
+        <p class="opening__statement" id="hero-statement">Edito, animo y diseño piezas que tienen que funcionar fuera del computador: un video narrativo, un empaque que se sostiene en el estante o una marca que busque destacarse.</p>
+        <p class="opening__readout" aria-hidden="true">
+          <span id="hero-timecode">00:00:42:18</span>
           <span>1920 × 1080 · 24 fps</span>
           <span>proyecto 2026</span>
-        </figcaption>
-      </figure>
+        </p>
+      </header>
     </section>
 
-    <section class="block container" id="perfil">
-      <header class="block__intro">
-        <h2>Cómo trabajo</h2>
-        <p class="muted">Cuatro pistas que corren en paralelo en casi cualquier encargo. La barra indica cuánto peso tiene cada una en lo que hago hoy.</p>
-      </header>
+    <section class="timeline" id="perfil" aria-labelledby="perfil-title">
+      <article class="timeline__pin container">
+        <header class="block__intro">
+          <h2 id="perfil-title">Cómo trabajo</h2>
+          <p class="muted">Cuatro pistas que corren en paralelo en casi cualquier encargo. La barra indica cuánto peso tiene cada una en lo que hago hoy.</p>
+        </header>
 
-      <ul class="tracks list-unstyled">
-        <li class="track">
-          <span class="track__id">V1</span>
-          <h3 class="track__name">Producción audiovisual</h3>
-          <p class="track__desc">Guion técnico, montaje narrativo, corrección de color y entrega en los formatos que pide cada canal.</p>
-          <p class="track__clip" aria-hidden="true"><span class="clip-90"></span></p>
-        </li>
-        <li class="track">
-          <span class="track__id">V2</span>
-          <h3 class="track__name">Diseño gráfico</h3>
-          <p class="track__desc">Identidad visual, ilustración, carteles, pixel art y modelado isométrico con un sistema de marca detrás.</p>
-          <p class="track__clip" aria-hidden="true"><span class="clip-75"></span></p>
-        </li>
-        <li class="track">
-          <span class="track__id">V3</span>
-          <h3 class="track__name">Motion graphics</h3>
-          <p class="track__desc">Animación de logotipos y publicidad dinámica trabajando curvas de animación, máscaras y capas de forma.</p>
-          <p class="track__clip" aria-hidden="true"><span class="clip-60"></span></p>
-        </li>
-        <li class="track">
-          <span class="track__id">V4</span>
-          <h3 class="track__name">Marketing digital</h3>
-          <p class="track__desc">Piezas gráficas y videos cortos pensados para retención, con seguimiento de métricas en redes sociales.</p>
-          <p class="track__clip" aria-hidden="true"><span class="clip-50"></span></p>
-        </li>
-
-        <li class="track">
-          <span class="track__id">V5</span>
-          <h3 class="track__name">Edición Sonora</h3>
-          <p class="track__desc">Crear diferentes experiencias sonora clara, dinámica y coherente con la identidad y narrativa del proyecto, cuidando tanto los aspectos técnicos como la intención creativa del sonido.</p>
-          <p class="track__clip" aria-hidden="true"><span class="clip-50"></span></p>
-        </li>
-      </ul>
+        <ul class="tracks list-unstyled" id="tracks">
+          <li class="track">
+            <span class="track__id">V1</span>
+            <h3 class="track__name">Producción audiovisual</h3>
+            <p class="track__desc">Guion técnico, montaje narrativo, corrección de color y entrega en los formatos que pide cada canal.</p>
+            <p class="track__clip" aria-hidden="true"><span class="clip-90"></span></p>
+          </li>
+          <li class="track">
+            <span class="track__id">V2</span>
+            <h3 class="track__name">Diseño gráfico</h3>
+            <p class="track__desc">Identidad visual, ilustración, carteles, pixel art y modelado isométrico con un sistema de marca detrás.</p>
+            <p class="track__clip" aria-hidden="true"><span class="clip-75"></span></p>
+          </li>
+          <li class="track">
+            <span class="track__id">V3</span>
+            <h3 class="track__name">Motion graphics</h3>
+            <p class="track__desc">Animación de logotipos y publicidad dinámica trabajando curvas de animación, máscaras y capas de forma.</p>
+            <p class="track__clip" aria-hidden="true"><span class="clip-60"></span></p>
+          </li>
+          <li class="track">
+            <span class="track__id">V4</span>
+            <h3 class="track__name">Marketing digital</h3>
+            <p class="track__desc">Piezas gráficas y videos cortos pensados para retención, con seguimiento de métricas en redes sociales.</p>
+            <p class="track__clip" aria-hidden="true"><span class="clip-50"></span></p>
+          </li>
+        </ul>
+      </article>
     </section>
 
     <section class="block container" id="trabajo">
@@ -118,8 +106,8 @@
         <p class="muted">Trabajo académico, institucional y de marca realizado entre 2024 y 2026.</p>
       </header>
 
-      <ul class="row g-4 list-unstyled">
-        <li class="col-md-6">
+      <ul class="bento list-unstyled">
+        <li class="bento__item bento__item--tall">
           <article class="work">
             <figure class="work__frame work__frame--vertical">
               <video poster="img/macondo-poster.webp" controls preload="none" playsinline width="720" height="1280">
@@ -138,7 +126,7 @@
           </article>
         </li>
 
-        <li class="col-md-6">
+        <li class="bento__item">
           <article class="work">
             <figure class="work__frame frame-2">
               <img src="img/conserva-mockup.webp" alt="Pouch blanco y verde de Cosecha Selecta con ventana ovalada que deja ver los huevos de codorniz, sobre una mesa de madera." width="960" height="540" loading="lazy" decoding="async">
@@ -154,7 +142,7 @@
           </article>
         </li>
 
-        <li class="col-md-6">
+        <li class="bento__item">
           <article class="work">
             <figure class="work__frame frame-3">
               <video poster="img/creatures-poster.webp" controls preload="none" playsinline muted width="1280" height="720">
@@ -173,8 +161,8 @@
           </article>
         </li>
 
-        <li class="col-md-6">
-          <article class="work">
+        <li class="bento__item bento__item--full">
+          <article class="work work--split">
             <figure class="work__frame frame-4">
               <video poster="img/animacion-poster.webp" controls preload="none" playsinline width="1280" height="720">
                 <source src="video/animacion-logo.mp4" type="video/mp4">
@@ -191,25 +179,26 @@
             </ul>
           </article>
         </li>
-        <li class="col-md-6">
-          <article class="work">
-            <figure class="work__frame frame-5">
-              <video poster="img/lich-king.webp" controls preload="none" playsinline width="1280" height="720">
-                <source src="video/videoarthas.mp4" type="video/mp4">
-                <a href="video/videoarthas.mp4">Descargar video</a>
-              </video>
-              <figcaption class="frame__tag">Edición Sonora</figcaption>
-            </figure>
-            <h3>Edición sonora para el videojuego: World of Warcraft. </h3>
-            <p class="work__text">Pieza sonora para el tráiler cinematográfico de World of Warcraft: Wrath of the Lich King, protagonizado por Arthas Menethil, el Rey Exánime. Una pieza que introduce la ambientación de Rasganorte, la Plaga y el conflicto que define esta expansión del videojuego.</p>
-            <ul class="tags list-unstyled">
-              <li>Videojuego</li>
-              <li>Trailer</li>
-              <li>Sonido</li>
-            </ul>
-          </article>
-        </li>
       </ul>
+    </section>
+
+    <section class="teaser" id="juegos" aria-labelledby="teaser-title">
+      <header class="teaser__head container">
+        <p class="hero__role">Pixelteca</p>
+        <h2 id="teaser-title">Cinco juegos. Un cartucho para cada uno.</h2>
+        <p class="muted">Elige uno de la estantería, mételo en la consola y juega en el navegador.</p>
+        <p class="hero__actions">
+          <a class="btn btn-violet" href="pixelteca.html">Abrir la Pixelteca</a>
+        </p>
+      </header>
+
+      <ol class="rail list-unstyled" id="rail">
+        <li><a class="rail__card" href="pixelteca.html#galaxhell"><canvas data-cover="galaxhell" width="256" height="160" aria-hidden="true"></canvas><span>GALAXHELL</span></a></li>
+        <li><a class="rail__card" href="pixelteca.html#goblinz"><canvas data-cover="goblinz" width="256" height="160" aria-hidden="true"></canvas><span>Goblinz Massacre</span></a></li>
+        <li><a class="rail__card" href="pixelteca.html#nachthexen"><canvas data-cover="nachthexen" width="256" height="160" aria-hidden="true"></canvas><span>Nachthexen</span></a></li>
+        <li><a class="rail__card" href="pixelteca.html#strikers"><canvas data-cover="strikers" width="256" height="160" aria-hidden="true"></canvas><span>Dimension Strikers</span></a></li>
+        <li><a class="rail__card" href="pixelteca.html#formula"><canvas data-cover="formula" width="256" height="160" aria-hidden="true"></canvas><span>Fórmula Azul</span></a></li>
+      </ol>
     </section>
 
     <section class="block container">
@@ -234,5 +223,7 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <script src="js/cartridges.js"></script>
+  <script src="js/hero.js"></script>
 </body>
 </html>

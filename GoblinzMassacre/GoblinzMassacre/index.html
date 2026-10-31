@@ -18,6 +18,7 @@
   <div id="game">
     <div id="view">
       <canvas id="screen"></canvas>
+      <canvas id="viewmodel"></canvas>
 
       <div id="crosshair"><span></span><span></span><span></span><span></span></div>
       <div id="dmgDir"><div></div></div>
@@ -26,8 +27,10 @@
       <div id="lowHp"></div>
 
       <div id="topBar">
-        <div id="topWave">OLEADA 1</div>
-        <div id="topLeft">GOBLINS: 0</div>
+        <div id="waveBanner">
+          <div id="topWave">OLEADA 1</div>
+          <div id="topLeft">GOBLINS: 0</div>
+        </div>
         <div id="topScore">0</div>
       </div>
       <div id="comboBox"></div>
@@ -36,38 +39,37 @@
       <canvas id="minimap" width="128" height="128"></canvas>
       <div id="fps"></div>
       <div id="lockHint" class="hidden">Haz clic para capturar el ratón</div>
+
+      <!-- HUD: frasco de sangre, runas de armadura y cinturón de munición -->
+      <div id="hud">
+        <canvas id="flask" width="84" height="104"></canvas>
+        <div id="vitals">
+          <div class="vital blood"><b id="hudHp">100</b><span>SANGRE</span></div>
+          <div class="vital rune"><b id="hudArmor">0</b><span>RUNAS</span></div>
+          <div class="vital gold"><b id="hudGold">0</b><span>ORO</span></div>
+        </div>
+        <div id="loadout">
+          <div id="hudWeaponName">ESCUPEPLOMO</div>
+          <div id="beltRow">
+            <canvas id="belt" width="220" height="30"></canvas>
+            <div id="ammoCount"><b id="hudAmmo">50</b><span id="hudAmmoLbl">BALAS</span></div>
+          </div>
+          <div id="hudArms">
+            <span id="arm1"><img alt=""><i>1</i></span>
+            <span id="arm2"><img alt=""><i>2</i></span>
+            <span id="arm3"><img alt=""><i>3</i></span>
+            <span id="arm4"><img alt=""><i>4</i></span>
+            <span id="arm5"><img alt=""><i>5</i></span>
+          </div>
+          <div id="ammoList">
+            <span>BALAS <em id="amB">0</em></span>
+            <span>CARTUCHOS <em id="amS">0</em></span>
+            <span>COHETES <em id="amR">0</em></span>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div id="hud">
-      <div class="hp-panel panel" id="pAmmo">
-        <div class="num" id="hudAmmo">50</div>
-        <div class="lbl" id="hudAmmoLbl">MUNICIÓN</div>
-      </div>
-      <div class="panel" id="pHp">
-        <div class="num" id="hudHp">100%</div>
-        <div class="lbl">SALUD</div>
-      </div>
-      <div class="panel" id="pArms">
-        <div id="hudArms">
-          <span id="arm1">1</span><span id="arm2">2</span><span id="arm3">3</span><span id="arm4">4</span><span id="arm5">5</span>
-        </div>
-        <div class="lbl" id="hudWeaponName">ESCUPEPLOMO</div>
-      </div>
-      <div class="panel face-panel"><canvas id="face" width="24" height="26"></canvas></div>
-      <div class="panel" id="pArmor">
-        <div class="num" id="hudArmor">0%</div>
-        <div class="lbl">ARMADURA</div>
-      </div>
-      <div class="panel" id="pGold">
-        <div class="num gold" id="hudGold">0</div>
-        <div class="lbl">ORO</div>
-      </div>
-      <div class="panel ammo-list" id="pAmmoList">
-        <div><b>BAL</b> <span id="amB">0</span>/<i id="amBm">300</i></div>
-        <div><b>CAR</b> <span id="amS">0</span>/<i id="amSm">60</i></div>
-        <div><b>COH</b> <span id="amR">0</span>/<i id="amRm">30</i></div>
-      </div>
-    </div>
   </div>
 
   <div id="scanlines"></div>
@@ -89,6 +91,7 @@
       <button class="btn" id="btnScores">SCOREBOARD</button>
       <button class="btn" id="btnOptions">OPCIONES</button>
       <button class="btn" id="btnCredits">CRÉDITOS</button>
+      <a class="btn" id="btnHome" href="../../index.html">PÁGINA PRINCIPAL</a>
     </nav>
     <p class="hint">WASD moverse · Ratón apuntar · Clic disparar · Q / rueda cambiar arma · Espacio saltar · Shift esquivar · Esc pausa</p>
     <p class="hint warn hidden" id="mobileWarn">Este juego necesita teclado y ratón.</p>
@@ -241,6 +244,8 @@
   <audio id="musicMenu" src="Elmenu.mp3" loop preload="auto"></audio>
   <audio id="musicLevel" src="Musicanivel.mp3" loop preload="auto"></audio>
 
+  <script src="three.min.js"></script>
+  <script src="weapons3d.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

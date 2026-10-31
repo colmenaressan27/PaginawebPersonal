@@ -15,9 +15,12 @@
   --violet: #6f42c1;
   --violet-deep: #593196;
   --violet-soft: #b197fc; /* acento de texto: cumple contraste AA sobre fondos oscuros */
-  --radius: 14px;
-  --radius-sm: 8px;
-  --block: clamp(3.5rem, 8vw, 6rem); /* ritmo vertical entre bloques */
+  --radius: 20px;
+  --radius-sm: 12px;
+  --block: clamp(4.5rem, 10vw, 8rem); /* ritmo vertical entre bloques */
+  --header-h: 4rem;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1); /* arranque rápido y frenado largo */
+  --ease-soft: cubic-bezier(0.22, 0.61, 0.36, 1);
   --font-display: "Sora", system-ui, sans-serif;
   --font-text: "IBM Plex Sans", system-ui, "Segoe UI", Roboto, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "Courier New", monospace;
@@ -41,7 +44,7 @@ body {
   color: var(--paper);
   font-family: var(--font-text);
   line-height: 1.6;
-  overflow-x: hidden; /* red de seguridad contra el scroll lateral en móviles */
+  overflow-x: clip; /* red de seguridad contra el scroll lateral: no rompe los elementos fijados */
 }
 
 h1,
@@ -140,9 +143,48 @@ a:focus {
 
 /* 4. Cabecera y navegación ------------------------------------------------- */
 .site-header {
-  background-color: rgba(10, 10, 10, 0.92);
-  backdrop-filter: blur(10px);
+  background-color: rgba(10, 10, 10, 0.72);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 1px solid var(--line);
+  transition: background-color 0.5s var(--ease-soft), border-color 0.5s var(--ease-soft), margin-bottom 0.5s var(--ease-out);
+}
+
+/* Barra de progreso de lectura */
+.site-header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background-image: linear-gradient(90deg, var(--violet), var(--violet-soft));
+  transform: scaleX(var(--scroll, 0));
+  transform-origin: left;
+  pointer-events: none;
+}
+
+/* Arriba del todo la barra se funde con la página; al bajar se vuelve de vidrio. */
+.js .site-header:not(.is-scrolled) {
+  background-color: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-bottom-color: transparent;
+}
+
+.navbar {
+  min-height: var(--header-h);
+  padding: 0 0.75rem;
+  transition: min-height 0.5s var(--ease-out);
+}
+
+/* Se compacta sin mover la página: el margen compensa la altura perdida. */
+.site-header.is-scrolled {
+  margin-bottom: 0.75rem;
+}
+
+.site-header.is-scrolled .navbar {
+  min-height: calc(var(--header-h) - 0.75rem);
 }
 
 .navbar-brand {
@@ -153,6 +195,7 @@ a:focus {
   font-weight: 700;
   font-size: 1.05rem;
   color: var(--paper);
+  transition: color 0.3s var(--ease-soft);
 }
 
 .navbar-brand:hover,
@@ -161,9 +204,30 @@ a:focus {
 }
 
 .navbar .nav-link {
+  position: relative;
   color: var(--muted);
-  font-size: 0.98rem;
+  font-size: 0.94rem;
   padding-inline: 0.9rem;
+  transition: color 0.3s var(--ease-soft);
+}
+
+.navbar .nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0.9rem;
+  right: 0.9rem;
+  bottom: 0.25rem;
+  height: 1px;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s var(--ease-out);
+}
+
+.navbar .nav-link:hover::after,
+.navbar .nav-link:focus-visible::after,
+.navbar .nav-link[aria-current="page"]::after {
+  transform: scaleX(1);
 }
 
 .navbar .nav-link:hover,
@@ -185,9 +249,10 @@ a:focus {
 .btn-ghost {
   font-weight: 600;
   border-radius: 999px;
-  padding: 0.7rem 1.6rem;
+  padding: 0.75rem 1.7rem;
   border: 1px solid transparent;
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  transition: background-color 0.3s var(--ease-soft), color 0.3s var(--ease-soft), border-color 0.3s var(--ease-soft),
+    box-shadow 0.5s var(--ease-out), transform 0.5s var(--ease-out);
 }
 
 .btn-violet {
@@ -199,11 +264,15 @@ a:focus {
 .btn-violet:focus {
   background-color: var(--violet-deep);
   color: #fff;
+  box-shadow: 0 12px 34px rgba(111, 66, 193, 0.5);
 }
 
 .btn-ghost {
   border-color: var(--line);
   color: var(--paper);
+  background-color: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .btn-ghost:hover,
@@ -212,26 +281,18 @@ a:focus {
   color: var(--violet-soft);
 }
 
-/* 6. Portada: monitor de edición ------------------------------------------- */
-.hero {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: clamp(2rem, 5vw, 3.5rem);
-  padding-top: clamp(3rem, 7vw, 5rem);
-  padding-bottom: var(--block);
+.btn-violet:hover,
+.btn-ghost:hover {
+  transform: scale(1.04);
 }
 
-.hero__text {
-  flex: 1 1 21rem;
-  min-width: 0;
+.btn-violet:active,
+.btn-ghost:active {
+  transform: scale(0.97);
+  transition-duration: 0.12s;
 }
 
-.monitor {
-  flex: 1 1 24rem;
-  min-width: 0;
-}
-
+/* 6. Portada: superficie de partículas y secuencia fijada ------------------ */
 .hero__role {
   font-family: var(--font-mono);
   color: var(--violet-soft);
@@ -245,14 +306,6 @@ a:focus {
   flex-wrap: wrap;
   gap: 0.9rem;
   margin-top: 2rem;
-}
-
-.monitor {
-  margin: 0;
-  background-color: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  overflow: hidden;
 }
 
 .monitor__bars {
@@ -271,117 +324,272 @@ a:focus {
   );
 }
 
-.monitor__screen {
-  display: block;
-  padding: 1.5rem 1.25rem 1rem;
+.opening {
+  position: relative;
+  margin-top: calc(var(--header-h) * -1); /* la barra flota sobre la portada */
 }
 
-.monitor__wave {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-.monitor__wave .wave-line {
-  fill: none;
-  stroke: var(--violet-soft);
-  stroke-width: 2;
-  stroke-linejoin: round;
-}
-
-.monitor__wave .wave-grid {
-  stroke: #333;
-  stroke-width: 1;
-}
-
-.monitor__wave .playhead {
-  stroke: var(--violet);
-  stroke-width: 3;
-  animation: sweep 7s linear infinite;
-}
-
-@keyframes sweep {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(600px);
-  }
-}
-
-.monitor__readout {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 0.5rem;
-  border-top: 1px solid var(--line);
-  padding: 0.7rem 1.25rem;
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  color: var(--muted);
-  margin: 0;
-}
-
-/* 7. Perfil: pistas de trabajo --------------------------------------------- */
-.tracks {
+.opening__pin {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  min-height: 100svh;
+  padding: calc(var(--header-h) + 2rem) 1.25rem 5rem;
+  overflow: hidden;
+  text-align: center;
+  background-image: radial-gradient(ellipse at 50% 85%, rgba(111, 66, 193, 0.5), transparent 65%);
+}
+
+.opening__canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.opening__canvas[hidden] {
+  display: none;
+}
+
+/* Oscurece la parte alta para que el título siempre se lea. */
+.opening__pin::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(180deg, rgba(10, 10, 10, 0.86) 0, rgba(10, 10, 10, 0.2) 52%, transparent 70%);
+}
+
+.opening__title,
+.opening__actions,
+.opening__statement,
+.opening__readout {
+  position: relative;
+  z-index: 2;
+}
+
+.opening__title {
   margin: 0;
-  padding: 0;
+  width: 100%;
+}
+
+.opening__title .hero__role {
+  margin-inline: auto;
+}
+
+.opening__title h1 {
+  font-size: clamp(3rem, 12.5vw, 10.5rem);
+  letter-spacing: -0.05em;
+  line-height: 0.98;
+  margin: 0;
+}
+
+.opening__actions {
+  justify-content: center;
+  margin-top: 0;
+}
+
+.opening__statement {
+  width: min(58rem, 100%);
+  max-width: none;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.45rem, 3.5vw, 2.9rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.24;
+  color: var(--paper);
+}
+
+.opening__readout {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 1.2rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.3rem 2rem;
+  max-width: none;
+  margin: 0;
+  padding-inline: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Secuencia fijada: solo se activa con JavaScript y movimiento permitido. */
+.opening.is-scrub {
+  height: 340vh;
+}
+
+.opening.is-scrub .opening__pin {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  min-height: 0;
+}
+
+.opening.is-scrub .opening__title,
+.opening.is-scrub .opening__actions {
+  opacity: calc(1 - var(--title, 0) * 1.3);
+  transform: translateY(calc(var(--title, 0) * -3rem)) scale(calc(1 + var(--title, 0) * 0.18));
+}
+
+.opening.is-scrub .opening__statement {
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  padding-inline: 1.25rem;
+  opacity: calc(var(--statement, 0) * (1 - var(--leave, 0)));
+  transform: translate(-50%, calc(-50% + (1 - var(--statement, 0)) * 2.5rem - var(--leave, 0) * 2.5rem));
+}
+
+.opening__word {
+  opacity: 0.16;
+  transition: opacity 0.6s var(--ease-soft);
+}
+
+.opening__word.is-lit {
+  opacity: 1;
+}
+
+/* 7. Perfil: línea de tiempo con cabezal ------------------------------------ */
+.timeline {
+  position: relative;
+  padding-block: var(--block);
+}
+
+.timeline__pin {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.timeline .block__intro {
+  margin-bottom: 2rem;
+}
+
+.tracks {
+  --lanes: 48%;
+  --playhead: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 2.1rem 0 0;
+  background-color: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+/* Regla de tiempo */
+.tracks::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: var(--lanes);
+  right: 0;
+  height: 2.1rem;
+  background-image: repeating-linear-gradient(90deg, #4b4b4b 0 1px, transparent 1px 2.5%),
+    repeating-linear-gradient(90deg, #7a7a86 0 1px, transparent 1px 12.5%);
+  background-size: 100% 0.45rem, 100% 0.9rem;
+  background-repeat: no-repeat;
+  background-position: left bottom;
+}
+
+/* Cabezal: revela los clips a medida que pasa */
+.tracks::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--lanes) + (100% - var(--lanes)) * var(--playhead));
+  width: 2px;
+  margin-left: -1px;
+  background-color: var(--violet-soft);
+  box-shadow: 0 0 18px 2px rgba(177, 151, 252, 0.7);
+  pointer-events: none;
 }
 
 .track {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 3.4rem calc(var(--lanes) - 3.4rem) 1fr;
+  grid-template-rows: auto auto;
   align-items: center;
-  gap: 0.4rem 1.25rem;
-  background-color: var(--ink);
-  border: 1px solid var(--line);
-  border-left: 3px solid var(--violet);
-  border-radius: var(--radius-sm);
-  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--line);
+  padding-block: 1.05rem;
 }
 
 .track__id {
+  grid-row: 1 / span 2;
   font-family: var(--font-mono);
   font-size: 0.8rem;
   color: var(--violet-soft);
-  flex: 0 0 2.5rem;
+  text-align: center;
 }
 
 .track__name {
-  flex: 1 1 12rem;
   font-size: 1.1rem;
-  margin: 0;
+  margin: 0 0 0.25rem;
+  padding-right: 1.5rem;
 }
 
 .track__desc {
-  flex: 2 1 22rem;
+  grid-column: 2;
   color: var(--muted);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
   margin: 0;
+  padding-right: 1.5rem;
   max-width: none;
 }
 
 .track__clip {
-  flex: 0 0 100%;
-  height: 6px;
-  border-radius: 999px;
-  background-color: #262626;
-  overflow: hidden;
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  height: 2.6rem;
+  margin: 0;
+  max-width: none;
+  background-color: #141417;
 }
 
 .track__clip span {
   display: block;
+  width: 100%;
   height: 100%;
-  background-image: linear-gradient(90deg, var(--violet-deep), var(--violet-soft));
+  background-image: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.2) 0 1px, transparent 1px 1.6rem),
+    linear-gradient(90deg, var(--violet-deep), var(--violet-soft));
+  background-size: var(--clip) 100%;
+  background-repeat: no-repeat;
+  clip-path: inset(0 calc((1 - var(--playhead)) * 100%) 0 0);
 }
 
-.clip-90 { width: 90%; }
-.clip-75 { width: 75%; }
-.clip-60 { width: 60%; }
-.clip-50 { width: 50%; }
+.clip-90 { --clip: 90%; }
+.clip-75 { --clip: 75%; }
+.clip-60 { --clip: 60%; }
+.clip-50 { --clip: 50%; }
+
+/* En pantallas amplias la línea de tiempo se queda fija mientras corre el cabezal. */
+@media (min-width: 992px) and (min-height: 720px) {
+  .js .timeline {
+    height: 240vh;
+    padding-block: 0;
+  }
+
+  .js .timeline__pin {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    padding-top: var(--header-h);
+  }
+}
 
 /* 8. Portafolio: tarjetas de proyecto -------------------------------------- */
 .work {
@@ -393,14 +601,15 @@ a:focus {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   overflow: hidden;
-  transition: border-color 0.25s ease, transform 0.25s ease;
+  transition: border-color 0.5s var(--ease-soft), transform 0.7s var(--ease-out), box-shadow 0.7s var(--ease-out);
   
 }
 
 .work:hover,
 .work:focus-within {
   border-color: var(--violet);
-  transform: translateY(-4px);
+  transform: translateY(-6px);
+  box-shadow: 0 24px 60px rgba(111, 66, 193, 0.22);
 }
 
 .work__frame {
@@ -420,6 +629,14 @@ a:focus {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.work__frame img {
+  transition: transform 1.1s var(--ease-out);
+}
+
+.work:hover .work__frame img {
+  transform: scale(1.04);
 }
 
 /* El reel es vertical: se muestra completo sobre un respaldo desenfocado
@@ -824,7 +1041,177 @@ a:focus {
   margin: 0;
 }
 
-/* 12. Pixelteca: estantería 3D, consola y pantalla CRT --------------------- */
+/* 12. Inicio: cuadrícula de proyectos y franja de juegos -------------------- */
+.bento {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  margin: 0;
+  padding: 0;
+}
+
+.bento__item {
+  min-width: 0;
+}
+
+/* El reel vertical ocupa todo el alto de su tarjeta */
+.bento__item--tall .work__frame {
+  flex: 1 1 auto;
+  aspect-ratio: auto;
+  min-height: 22rem;
+}
+
+.bento__item--tall .work__frame video {
+  position: absolute;
+  inset: 0;
+}
+
+.bento__item--tall .work__text {
+  flex-grow: 0;
+}
+
+.work--split .work__frame {
+  border-bottom: 0;
+}
+
+@media (min-width: 768px) {
+  .bento {
+    grid-template-columns: 5fr 7fr;
+  }
+
+  .bento__item--tall {
+    grid-row: span 2;
+  }
+
+  .bento__item--full {
+    grid-column: 1 / -1;
+  }
+
+  .work--split {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    grid-template-rows: 1fr auto auto 1fr;
+    gap: 0.7rem 0;
+  }
+
+  .work--split .work__frame {
+    grid-row: 1 / -1;
+    grid-column: 1;
+    border-right: 1px solid var(--line);
+  }
+
+  .work--split h3 {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: end;
+  }
+
+  .work--split .work__text {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .work--split .tags {
+    grid-column: 2;
+    grid-row: 3;
+    margin-bottom: 0;
+  }
+}
+
+.teaser {
+  position: relative;
+  padding-block: var(--block);
+  overflow: hidden;
+  background-image: radial-gradient(ellipse 75% 60% at 50% 0, rgba(111, 66, 193, 0.3), transparent 72%);
+}
+
+.teaser__head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+.teaser__head .hero__role {
+  margin-bottom: 0.9rem;
+}
+
+.teaser__head h2 {
+  max-width: 26ch;
+  font-family: var(--font-pixel);
+  font-size: clamp(1.05rem, 3vw, 2.1rem);
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.55;
+  text-shadow: 3px 3px 0 var(--violet-deep);
+}
+
+.teaser__head .hero__actions {
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.rail {
+  --rail: 0.5;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem;
+  margin: 0;
+  padding: 1rem 1.5rem 2rem;
+}
+
+/* Con scroll animado la fila recorre la pantalla de derecha a izquierda. */
+.rail.is-scrub {
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  width: max-content;
+  transform: translate3d(calc(10vw * (1 - var(--rail)) + (100vw - 100%) * var(--rail)), 0, 0);
+  will-change: transform;
+}
+
+.rail__card {
+  position: relative;
+  display: block;
+  width: clamp(14rem, 24vw, 21rem);
+  padding: 0.75rem 0.75rem 1rem;
+  overflow: hidden;
+  color: var(--paper);
+  text-decoration: none;
+  background-image: linear-gradient(180deg, #2c2c32, #1c1c20);
+  border-radius: var(--radius);
+  box-shadow: 0 0 0 1px var(--line);
+  transition: transform 0.6s var(--ease-out), box-shadow 0.6s var(--ease-out);
+}
+
+.rail__card:hover,
+.rail__card:focus-visible {
+  color: var(--paper);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 0 0 1px var(--violet-soft), 0 20px 50px rgba(111, 66, 193, 0.5);
+}
+
+.rail__card canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 8 / 5;
+  background-color: var(--ink);
+  border-radius: var(--radius-sm);
+  image-rendering: pixelated;
+}
+
+.rail__card span {
+  display: block;
+  margin-top: 0.8rem;
+  font-family: var(--font-pixel);
+  font-size: 0.62rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* 13. Pixelteca: estantería 3D, consola y pantalla CRT --------------------- */
 .pixelteca {
   padding-top: clamp(2.5rem, 6vw, 4rem);
   padding-bottom: var(--block);
@@ -881,6 +1268,8 @@ a:focus {
 .stage__canvas {
   display: block;
   width: 100%;
+  flex: 1 1 auto; /* llena la altura de la ficha lateral */
+  min-height: 0;
   aspect-ratio: 16 / 10;
   background-image: radial-gradient(ellipse at 50% 35%, #1d1430 0, #0c0a12 72%);
   touch-action: pan-y; /* deja hacer scroll vertical en móviles */
@@ -1468,8 +1857,156 @@ a:focus {
   color: #6c6c78;
 }
 
-/* 13. Adaptaciones responsivas y accesibilidad ----------------------------- */
+/* 14. Movimiento: apariciones, brillo del cursor y transiciones ------------- */
+@view-transition {
+  navigation: auto;
+}
+
+.site-header {
+  view-transition-name: site-header;
+}
+
+::view-transition-old(root) {
+  animation: page-out 0.26s var(--ease-soft) both;
+}
+
+::view-transition-new(root) {
+  animation: page-in 0.6s var(--ease-out) both;
+}
+
+@keyframes page-out {
+  to {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: scale(1.015);
+  }
+}
+
+/* Solo se oculta con JavaScript activo: sin él todo se ve desde el inicio. */
+.js [data-reveal]:not(.is-in) {
+  opacity: 0;
+}
+
+.js [data-reveal].is-in {
+  animation: reveal-in 1.15s var(--ease-out) var(--reveal-delay, 0ms) backwards;
+}
+
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(2.2rem) scale(0.975);
+    filter: blur(6px);
+  }
+}
+
+/* Título: cada palabra sube desde detrás de una máscara */
+.split {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding: 0 0.05em 0.14em;
+  margin: 0 -0.05em -0.14em;
+}
+
+.split__word {
+  display: inline-block;
+  background-image: linear-gradient(180deg, #fff 35%, var(--violet-soft) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  transform: translateY(112%);
+  transition: transform 1.35s var(--ease-out) var(--reveal-delay, 0ms);
+}
+
+.is-in > .split > .split__word {
+  transform: none;
+}
+
+.js .opening__title .hero__role,
+.js .opening__actions,
+.js .opening__readout {
+  animation: fade-up 1s var(--ease-out) 0.7s backwards;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+}
+
+/* Brillo que sigue al cursor */
+.work,
+.post,
+.form-panel,
+.contact-aside,
+.cart-info,
+.closer {
+  position: relative;
+}
+
+.work::after,
+.post::after,
+.form-panel::after,
+.contact-aside::after,
+.cart-info::after,
+.closer::after,
+.rail__card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  pointer-events: none;
+  background-image: radial-gradient(26rem circle at var(--mx, 50%) var(--my, 50%), rgba(177, 151, 252, 0.15), transparent 68%);
+  transition: opacity 0.5s var(--ease-soft);
+}
+
+.work:hover::after,
+.post:hover::after,
+.form-panel:hover::after,
+.contact-aside:hover::after,
+.cart-info:hover::after,
+.closer:hover::after,
+.rail__card:hover::after {
+  opacity: 1;
+}
+
+/* 15. Adaptaciones responsivas y accesibilidad ----------------------------- */
 @media (max-width: 767.98px) {
+  .tracks {
+    padding-top: 0;
+  }
+
+  .tracks::before,
+  .tracks::after {
+    display: none;
+  }
+
+  .track {
+    grid-template-columns: 2.8rem 1fr;
+    grid-template-rows: auto auto auto;
+    padding-right: 1rem;
+  }
+
+  .track:first-child {
+    border-top: 0;
+  }
+
+  .track__clip {
+    grid-column: 2;
+    grid-row: 3;
+    height: 1.1rem;
+    margin-top: 0.8rem;
+    border-radius: 6px;
+  }
+
   .stage__canvas {
     aspect-ratio: 4 / 3.4;
   }
